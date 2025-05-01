@@ -1,0 +1,464 @@
+\subsection*{Q3: Transformer and Language Modeling (5.5 pts)}
+
+
+In this homework, you are tasked with implementing a Transformer model for the causal language modeling task.
+
+\hfill
+
+
+\textbf{A GPU is essential for some of the tasks, thus make sure you follow the
+instruction to set up the GPU environment on scholar.rcac.purdue.edu.}
+%
+
+% 
+You can reuse your \texttt{CS587} conda environment created for previous homework. 
+%
+For this homework, you will need to install a new package, \texttt{tiktoken}:
+
+{\color{red}
+\begin{verbatim}
+pip install tiktoken
+\end{verbatim}
+}
+
+If you need to recreate the \texttt{CS587} environment, here are the commands:
+
+\begin{verbatim}
+module load anaconda/2024.02-py311
+conda create -n CS587 python=3.11 ipython ipykernel -y
+conda activate CS587
+pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cu121
+pip install scikit-learn seaborn more-itertools matplotlib 
+pip install tiktoken
+\end{verbatim}
+
+As always, we provide a Slurm batch submission script called \texttt{scholar.sh} in the skeleton code. You can use it to submit \emph{any} command lines to a GPU computing nodes. For instance, suppose the original command to run a python training script is \texttt{python main.py data}, then if run the following:
+\begin{verbatim}
+sbatch scholar.sh python main.py data
+\end{verbatim}
+Then the same job will be submitted to a GPU backend node. 
+
+% Homework framework overview.
+%
+\subsubsection*{Skeleton}
+%
+
+%
+\noindent Here is the folder structure that you should use:
+
+% Skeleton figure.
+%
+\tikzstyle{every node}=[draw=black,thick,anchor=west]
+\tikzstyle{selected}=[draw=red,fill=red!30]
+\tikzstyle{core}=[draw=blue,fill=blue!30]
+\tikzstyle{optional}=[dashed,draw=red,fill=gray!50]
+%
+\begin{tikzpicture}[%
+    grow via three points={
+        one child at (0.5,-0.7) and two children at (0.5,-0.7) and (0.5,-1.4)
+    },
+    edge from parent path={(\tikzparentnode.south) |- (\tikzchildnode.west)}
+]
+%
+    \node {hw\homeworknumber\_transformer\_skeleton}
+    child {node [selected] {my\_gpt.py}}
+    child {node [selected] {generate.py}}
+    child {node {input.txt}}
+    child {node {scholar.sh}}
+    child {node [selected] {README.md}};
+\end{tikzpicture}
+
+% Space.
+%
+\hfill
+
+% Skeleton description.
+%
+\begin{itemize}
+%
+\item
+    \textbf{{hw\homeworknumber\_transformer\_skeleton}:}
+    %
+    the top-level folder that contains all the files required in this homework.
+
+\item
+    \textbf{{my\_gpt.py}:}
+    \underline{You will need to fill in this file}. The model script that defines the GPT Transformer model. 
+
+\item
+    \textbf{{generate.py}:}
+    \underline{You will need to fill in this file}. The script that loades a trained model checkpoint and generates texts on new prompts.
+
+\item
+    \textbf{{input.txt}:}
+    The training data. A text corpus from the book ``Twenty Thousand Leagues under the Sea.''
+
+\item
+    \textbf{README.md:}
+    %
+    \underline{You will need to fill in this file}. Your ReadMe should begin with a couple of \textbf{execution commands},
+    e.g., ``python hw\homeworknumber.py data'', used to generate the outputs
+    you report.
+    %
+    TA would replicate your results with the commands provided here.
+    %
+    More detailed options, usages and designs of your program can be followed.
+    %
+    You can also list any concerns that you think TA should know while running
+    your program.
+    %
+    Note that put the information that you think it's more important at the
+    top.
+    %
+    Moreover, the file should be written in pure text format that can be
+    displayed with Linux ``less'' command.
+    %
+    You can refer to \texttt{interface.sh} for an example.
+%
+
+%
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection*{Action Items:}
+
+You should carefully look at the files \texttt{my\_gpt.py} and \texttt{generate.py}, where the necessary skeleton code has been provided for you. You should fill in your own code in the region marked by 
+
+\begin{verbatim}
+### TODO: You will need to complete the following
+...
+### END OF TODO ###
+\end{verbatim}
+
+In your report, include the answer of the following questions:
+\begin{enumerate}
+
+\item (2.0 pts)
+It is important to first understand how an autoregressive language Transformer model is trained for the causal language modeling task. 
+
+\begin{enumerate}
+
+    \item Let $f_{\theta}$ be an autoregressive Transformer model which
+    describes a conditional probability distribution $f_{\theta}(x_{t + 1} \mid
+    x_1, x_2, \dots, x_t)$ over the $(t+1)$-th token $x_{t+1}$, given some input
+    token sequence $[x_1, x_2, \dots, x_t]$. Now, given an input token sequence
+    $X = [x_1, x_2, \dots, x_T]$, write down the probability that $f_{\theta}$
+    would generates $X$, given the first starting token $x_1$.
+
+    \begin{answerbox}[1.5in]
+    The probability that the autoregressive Transformer model $f_{\theta}$ generates the token
+    sequence $X = [x_1, x_2, \dots, x_T]$ given the first starting token $x_1$ can be expressed as:
+    \begin{align*}
+        P(X \mid x_1) = f_{\theta}(x_2 \mid x_1) \cdot f_{\theta}(x_3 \mid x_1, x_2) \cdots f_{\theta}(x_T \mid x_1, x_2, \dots, x_{T-1})
+    \end{align*}
+
+    This equation states that the probability of generating the entire sequence
+    $X$ is the product of the conditional probabilities of each token given all
+    previous tokens. The model generates each token in a sequential manner,
+    conditioning on all previously generated tokens.
+    
+    \end{answerbox}
+
+    \item The causal language modeling task asks the model to learn to predict
+    the next tokens. Specifically, each training example is a token sequence
+    $[x_1, x_2, \dots, x_T]$. We then ask the model to learn to predict the last
+    token $x_T$ given $x_1, \dots, x_{T-1}$. If we denote the input token
+    sequence by $X$, and the target token sequence by $Y$, what tokens are $X$
+    and $Y$ composed of? Can you write down the mathematical expression for the
+    Negative Log-Likelihood (NLL) loss given a dataset $\mathcal{D} = \{
+    [x^{(i)}_1, \dots, x^{(i)}_{T_i}] \}_{i=1}^N$? You should expand and write
+    the loss function equation using individual tokens, not $X$ or $Y$. \\
+    \textbf{Hint:} You should take a look at the training loop in
+    \texttt{my\_gpt.py}. Your answer should match how the loss is computed
+    therein.
+
+    \begin{answerbox}[2.5in]
+    $X$ and $Y$ are composed of the same tokens, but $Y$ is shifted by one position
+    to the right compared to $X$. This means that for each token in $X$, the
+    corresponding token in $Y$ is the next token in the sequence. The NLL loss
+    can be expressed as follows:
+    \begin{align*}
+        \mathcal{L}_{\text{NLL}}(\theta) = -\frac{1}{N} \sum_{i=1}^{N} \sum_{t=1}^{T_i} \log f_{\theta}(x^{(i)}_t \mid x^{(i)}_1, x^{(i)}_2, \dots, x^{(i)}_{t-1})
+    \end{align*}
+    where $N$ is the number of training examples, $T_i$ is the length of the
+    $i$-th training example, and $f_{\theta}(x^{(i)}_t \mid x^{(i)}_1, x^{(i)}_2,
+    \dots, x^{(i)}_{t-1})$ is the conditional probability of the $t$-th token
+    given all previous tokens in the $i$-th training example. The loss is
+    averaged over all training examples and all tokens in each example.
+
+    % Students can write or type their answer here.
+    \end{answerbox}
+
+    \item Based on your answer to the previous question, during training, do we need to sample and generate model prediction tokens $\hat{y}$ and compare it with the ground-truth target tokens to compute the NLL loss? Explain why in either case in a few sentences.
+    \begin{answerbox}[1.5in]
+    During training, we do not need to sample and generate model prediction tokens $\hat{y}$.
+    Instead, we compute the NLL loss directly using the model's output logits for
+    each token in the sequence. The model outputs a probability distribution over
+    the vocabulary for each token position, and we can compute the loss using the
+    ground-truth target tokens. This approach allows us to efficiently compute the
+    loss without the need for sampling, which would introduce additional
+    randomness and make the training process less stable. By using the ground-truth
+    target tokens, we can directly optimize the model's parameters to minimize
+    the NLL loss, leading to more effective training.
+
+    % Students can write or type their answer here.
+    \end{answerbox}
+
+    \item Now, let $\mathbf{D} \in \mathbb{N}^{B \times T}$ be the token indices matrix for a batch of input text, where $B$ is the batch size and $T$ is the total sequence length (for simplicity, we will assume, both here and in the code, that every training example have the same token sequence length, thus avoiding padding). Explain how to obtain the input token indices matrix $\mathbf{X}$ and the target token indices matrix $\mathbf{Y}$ from $\mathbf{D}$. What are the shapes of both matrices? \\
+    You should fill in the missing parts in the \texttt{TextDataset} class in \texttt{my\_gpt.py} file. You answer to this question should exactly translate to your code.\\
+    \textbf{Hint:} Pay attention that the Transformer model output at position $t$ is actually meant for and aligned to the $(t+1)$-th token in the sequence. This is known as the ``shift-by-one'' problem.
+    
+    \begin{answerbox}[2.5in]
+    The input token indices matrix $\mathbf{X}$ is obtained by taking all columns of $\mathbf{D}$ except the last one. This can be expressed as:
+    \[
+    \mathbf{X} = \mathbf{D}[:, :-1]
+    \]
+    The shape of $\mathbf{X}$ is $(B, T-1)$, where $B$ is the batch size and $T$ is the total sequence length.
+
+    The target token indices matrix $\mathbf{Y}$ is obtained by taking all columns of $\mathbf{D}$ except the first one, and shifting the sequence to the left. This can be expressed as:
+    \[
+    \mathbf{Y} = \mathbf{D}[:, 1:]
+    \]
+    The shape of $\mathbf{Y}$ is also $(B, T-1)$, where $B$ is the batch size and $T$ is the total sequence length. The target tokens in $\mathbf{Y}$ are aligned with the input tokens in $\mathbf{X}$, such that the model's output at position $t$ corresponds to the target token at position $t+1$.
+
+    % Students can write or type their answer here.
+    \end{answerbox}
+    
+\end{enumerate}
+
+\item (0.5 pt)
+Our Transformer model will use the Rotary Positional Encoding (RoPE), one of the state-of-the-art PE for LLMs. You should fill in the missing parts of the \texttt{RotaryEmbedding} class and \texttt{apply\_rotary\_emb()} method in \texttt{my\_gpt.py}. \\
+In Q2, we have written out the expressions $\text{ROPE}_{2i}(\text{pos})$ and $\text{ROPE}_{2i + 1}(\text{pos})$, which are the ROPE values for positional indices $\text{pos}$.
+ Write down the RoPE rotation matrix $\mathbf{R}_{\text{pos}} \in \mathbb{R}^{d_{\text{head}} \times d_{\text{head}}}$, where $d_{\text{head}}$ is the dimension of the query/key states for each attention head. Then, let $m$ and $n$ be two distinct position indices. Let $\mathbf{q}_m, \mathbf{k}_n \in \mathbf{R}^{d_{\text{head}}}$ be the query and key state for the tokens at $m$-th and $n$-th position (after query/key projection), respectively. Write down the expression for the attention logit $\mathbf{q}_m^T \mathbf{k}_n$ in which the rotations $\mathbf{R}$ takes part. Explain why RoPE is able to model the ``relative'' position information of the $m$-th and $n$-th token.
+
+\begin{answerbox}[2.8in]
+ The RoPE rotation matrix $\mathbf{R}_{\text{pos}}$ is defined as:
+\begin{align*}
+    \mathbf{R}_{\text{pos}} = \begin{bmatrix}
+        \cos(\text{ROPE}_{2i}(\text{pos})) & -\sin(\text{ROPE}_{2i}(\text{pos})) \\
+        \sin(\text{ROPE}_{2i}(\text{pos})) & \cos(\text{ROPE}_{2i}(\text{pos}))
+    \end{bmatrix}
+\end{align*}
+The attention logit $\mathbf{q}_m^T \mathbf{k}_n$ can be expressed as:
+\begin{align*}
+    \mathbf{q}_m^T \mathbf{k}_n &= \left(\mathbf{R}_{\text{pos}}(\text{pos}_m) \cdot \mathbf{q}_m\right)^T \cdot \left(\mathbf{R}_{\text{pos}}(\text{pos}_n) \cdot \mathbf{k}_n\right) \\
+    &= \mathbf{q}_m^T \cdot \mathbf{R}_{\text{pos}}(\text{pos}_m)^T \cdot \mathbf{R}_{\text{pos}}(\text{pos}_n) \cdot \mathbf{k}_n
+\end{align*}
+
+The RoPE is able to model the relative position information of the $m$-th and
+$n$-th token because the rotation matrices
+$\mathbf{R}_{\text{pos}}(\text{pos}_m)$ and
+$\mathbf{R}_{\text{pos}}(\text{pos}_n)$ depend on the positional indices $m$ and
+$n$. The relative position information is captured in the product of the two
+rotation matrices, which encodes the angular difference between the two
+positions. This allows the model to learn and utilize the relative positional
+information during attention computation.
+
+    % Students can write or type their answer here.
+    \end{answerbox}
+
+    \item (0.5 pt) Now, you should fill in the missing parts of the
+    \texttt{CausalSelfAttention} class in \texttt{my\_gpt.py}, which is the
+    attention computation. You will need to implement the forward pass of the
+    attention module, including the query/key/value projections, and the
+    attention score computation. You can use the PyTorch function
+    \texttt{torch.einsum()} to compute the attention scores.
+
+ \begin{answerbox}[2in]
+    The attention score computation is given by the following equation:
+    \begin{align*}
+        \text{attn\_scores} = \frac{\mathbf{Q} \cdot \mathbf{K}^T}{\sqrt{d_{\text{head}}}}
+    \end{align*}
+    where $\mathbf{Q} \in \mathbb{R}^{B \times H \times T \times d_{\text{head}}}$ is the query matrix, $\mathbf{K} \in \mathbb{R}^{B \times H \times T \times d_{\text{head}}}$ is the key matrix, and $d_{\text{head}}$ is the dimension of each attention head. The attention scores are then passed through a softmax function to obtain the attention weights.
+    \begin{align*}
+        \text{attn\_weights} = \text{softmax}(\text{attn\_scores}, \text{dim}=-1)
+    \end{align*}
+
+    % Students can write or type their answer here.
+    \end{answerbox}
+
+
+\item (0.5 pts)
+Now, you should fill in the missing parts of \texttt{CausalSelfAttention.forward()} method in \texttt{my\_gpt.py}, which is the attention computation. Pay attention when computing and applying the causal mask, since we want to ensure every query state can only attend to key states that appear before (i.e. having a positional index smaller than) said query state. \\
+You are now ready to train the Transformer! Train your model with the default parameters (batch size 32, block size 128, train split 0.9, \& num epochs 4) with command \\
+\texttt{python my\_gpt.py}
+(or if you are Slurm sbatch, run with \texttt{sbatch scholar.sh python my\_gpt.py}). \\
+Report the validation loss at each epoch, and the training loss at the final step from the console output (or if you are using Slurm sbatch, the console logs will be saved to text files under the \texttt{slurm\_logs/} directory.)
+\begin{answerbox}[2in]
+    The validation loss at each epoch is as follows:
+    \begin{itemize}
+        \item Epoch [1/4] Validation Loss (per sample): 0.0038
+        \item Epoch [2/4] Validation Loss (per sample): 0.0031
+        \item Epoch [3/4] Validation Loss (per sample): 0.0027
+        \item Epoch [4/4] Validation Loss (per sample): 0.0026
+
+    \end{itemize}
+    The training loss at the final step is 0.0031.
+    % Students can write or type their answer here.
+    \end{answerbox}
+
+\item (1.0 pt)
+Once the training is finished and we have a model checkpoint, we can use it to generate new texts. You will need to fill in the \texttt{generate()} method in \texttt{generate.py}.  (You may ignore the parts for when KV cache is involved, and come back later).
+\begin{enumerate}
+    \item 
+
+    Describe what do the arguments \texttt{temperature} and \texttt{topk} do,
+    and what is the qualitative effect when their values are changed.
+
+    \begin{answerbox}[1.5in]
+    % Students can write or type their answer here.
+
+    The temperature parameter scales the logits before applying the softmax.
+    Lower values (e.g., 0.5) make the distribution sharper, leading to more
+    deterministic and conservative choices. Higher values (e.g., 1.5) flatten
+    the distribution, making sampling more random and diverse.  
+
+    The top-k parameter limits the number of tokens considered for sampling to
+    the top-k most probable ones. A smaller top-k (e.g., 5) results in less
+    diversity and more focused generation, while a larger top-k (e.g., 40)
+    allows for more varied outputs.
+
+    \end{answerbox}
+
+    \item Generate two texts with the initial prompt ``\texttt{The ship was}", one
+    with temperature 1.0, top-k 40, and another one with temperature 0.1, top-k
+    5. Report the your generated texts in your report PDF.
+
+    \begin{answerbox}[1.5in]
+        \begin{itemize}
+            \item \textbf{temperature 1.0, top-k 40:} The ship was, he
+            approached the depth of New Zealand; put into Calcutta, 7th April,
+            1828, and returned to France, where he was warmly welcomed by
+            Charles X.
+            \item \textbf{temperature 0.1, top-k 5:}
+            The ship was steered entirely by the compass and the log.
+        \end{itemize}
+
+    % Students can write or type their answer here.
+    \end{answerbox}
+    
+\end{enumerate}
+
+\item (1.5 pts)
+For autoregressive Transformer models, generating new texts given some input text $X$ requires feeding $X$ again and again to the model for each new token being generated. This incurs a lot of redundant computations and slows down the model generation speed. Thus, in modern LLMs, we leverage a technique known as \textbf{Key Value Caching (KV Caching)}, to cache the reusable intermediate representations.
+\begin{enumerate}
+
+    \item Given two input sequence, $X = [x_1, \dots, x_T]$ and $X' = [x_1,
+    \dots, x_T, x_{T+1}]$, where $x_{T+1}$ can be considered as the newly
+    generated token. Denote $\mathbf{H}^{(l)} = [\mathbf{h}_l^{(l)}, \dots,
+    \mathbf{h}_T^{(l)}] \in \mathbb{R}^{T \times d}, \mathbf{H'} =
+    [\mathbf{h}_1^{(l)}, \dots, \mathbf{h}_{T+1}^{(l)}] \in \mathbb{R}^{(T+1)
+    \times d}$ the output hidden states of the $l$-th layer (with
+    $\mathbf{H}^{(0)}$ and $\mathbf{H'}^{(0)}$ being the input hidden states to
+    the first layer). Denote $\mathbf{W}_Q, \mathbf{W}_K, \mathbf{W}_V,
+    \mathbf{W}_O$ the query, key, value, and output projection matrices,
+    respectively. Describe, in the attention computation, which intermediate
+    states are being recomputed between $X$ and $X'$, and could have been saved
+    in a cache to avoid recomputation. Also, describe how using or not using
+    causal masking affects what states might be cached.
+
+    \begin{answerbox}[1.5in]
+
+    Given two sequences $X = [x_1, \dots, x_T]$ and $X' = [x_1, \dots, x_T,
+    x_{T+1}]$, the attention computation for $x_{T+1}$ requires computing a new
+    query $Q_{T+1}$, and attending to keys and values $K_1, \dots, K_{T+1}$ and
+    $V_1, \dots, V_{T+1}$. The projections $K_1, \dots, K_T$ and $V_1, \dots,
+    V_T$ are shared with $X$ and can be cached to avoid recomputation. If causal
+    masking is used, past tokens do not attend to future ones, so the hidden
+    states for $x_1, \dots, x_T$ remain unchanged and caching is valid. Without
+    causal masking, earlier tokens can attend to $x_{T+1}$, so their hidden
+    states must be recomputed, making caching less effective.
+
+    \end{answerbox}
+
+    \item It is very important that you assign the correct RoPE when working
+    with KV cache. Take the input $X' = [x_1, \dots, x_T, x_{T+1}]$ as an
+    example, and suppose the model has seen the first $T$ tokens, $[x_1, \dots,
+    x_T]$, before and has saved the relevant cache, while $x_{T+1}$ is the
+    ``new'' token in this forward pass. Describe which RoPE rotations (more
+    specifically, RoPE with which range/sequence of positional indices) should
+    be applied to the query and key states. In addition, describe what causal
+    mask should be used here and applied to the attention scores with KV caching
+    enabled. 
+
+    \begin{answerbox}[1.5in]
+
+        With KV caching enabled, the RoPE rotations for the query and key states
+        should be applied only to the new token $x_{T+1}$, using the RoPE
+        rotation for the position $T+1$, while the key states for $x_1, \dots,
+        x_T$ are cached, and should not be re-rotated. 
+
+        The causal mask should be applied to ensure that the attention scores
+        for $x_{T+1}$ only attend to the previous tokens $x_1, \dots, x_T$,
+        which is trivially satisfied in this case when we are only computing the
+        attention score for $x_{T+1}$.
+
+    % Students can write or type their answer here.
+    \end{answerbox}
+    
+    \item You should now be ready to complete the KV cache implementation. Fill
+    in the relevant parts in \texttt{apply\_rotary\_emb()},
+    \texttt{CausalSelfAttention.forward()}, and \texttt{generate()}. Run the
+    generation again with KV-caching enabled, via \texttt{python generate.py
+    --use\_kv\_cache}, with the same two configurations of temperature and top-k
+    we used in the previous question (one with temperature 1.0, top-k 40, and
+    another one with temperature 0.1, top-k 5). Report your generated text. Are
+    they similar to what you generated previously without KV caching? \\
+    \textbf{Hint}: One debugging trick to ensure consistent generation with and
+    without KV caching, is to set top-k to 1. This is effectively greedy
+    sampling.
+
+    \begin{answerbox}[4in]
+
+    The ship was called by the circular storm of the southern hemisphere. Ah,
+    that Gulf Stream! It deserves its name of the King of Tempests. It is that
+    which causes those formidable cyclones, by the difference of temperature
+    between its air and its currents. A shower of fire had succeeded the rain.
+    The drops of water were changed to sharp spikes. One would have thought that
+    Captain Nemo was courting a death worthy of himself, a death by lightning.
+    As the \_Nautilus\_, pitching dreadfully, raised its steel spur in the air, it
+    seemed to act as a conductor, and I saw long sparks burst from it. Crushed
+    and without strength I crawled to the panel, opened it, and descended to the
+    saloon. The storm was then at its height. It was impossible to stand upright
+    in the interior of the \_Nautilus\_. Captain Nemo came down about twelve. I
+    heard the reservoirs filling by degrees, and the \_Nautilus\_ sank slowly
+    beneath the waves. Through the open windows in the saloon I saw large fish
+    terrified, passing like phantoms in the water. Some were struck before my
+    eyes. The \_Nautilus\_ was still descending. I thought that at about eight
+    fathoms deep we should find a calm. But no! the upper beds were too
+    violently agitated for that. We had to seek repose at more than twenty-five
+    fathoms in the bowels of the deep. But there, what quiet, what silence, what
+    peace! Who could have told that such a hurricane had been let loose on the
+    surface of that ocean?
+
+    The text is the same with and without KV caching.
+
+    \end{answerbox} 
+    
+\end{enumerate}
+
+
+
+\end{enumerate}

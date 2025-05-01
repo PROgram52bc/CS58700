@@ -1,0 +1,66 @@
+# ---- LaTeX build files ----
+*.aux
+*.bbl
+*.blg
+*.brf
+*.fls
+*.fdb_latexmk
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.gz
+*.nav
+*.snm
+*.vrb
+*.xdv
+*.pdf
+*.dvi
+
+# Editor swap/backup files
+*~
+*.swp
+*.bak
+
+# Overleaf, TeXShop, TeXstudio, etc.
+auto/
+*.synctex*
+*.xdy
+*.pdfsync
+
+# ---- Python bytecode and caches ----
+__pycache__/
+*.py[cod]
+*.class
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+
+# VSCode and other editor settings
+.vscode/
+.idea/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# binary
+*.png
+*.jpg
+
+# archive
+*.tar
+*.zip

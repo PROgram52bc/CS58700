@@ -1,0 +1,384 @@
+\section{Q3 (4.0 pts): Image classifiers with CNN and G-Invariant CNN} 
+In this task, you will implement a CNN, a G-invariant CNN and various tasks to better understand its inner workings.
+%
+
+\subsubsection*{Q3.a HW Overview}
+\label{subsubsec:overview}
+
+% Download skeleton.
+%
+\noindent \textbf{Skeleton Package:}
+%
+A skeleton package named ``\texttt{hw2\_imageclassifier\_skeleton}'' is provided on Brightspace.
+%
+You should be able to download it and use the folder structure provided.
+%
+%
+\noindent The zip file should have the following folder structure:
+
+ \hfill
+
+\tikzstyle{every node}=[draw=black,thick,anchor=west]
+\tikzstyle{selected}=[draw=red,fill=red!30]
+\tikzstyle{core}=[draw=blue,fill=blue!30]
+\tikzstyle{optional}=[dashed,draw=red,fill=gray!50]
+\begin{tikzpicture}[%
+  grow via three points={one child at (0.5,-0.7) and
+  two children at (0.5,-0.7) and (0.5,-1.4)},
+  edge from parent path={(\tikzparentnode.south) |- (\tikzchildnode.west)}]
+  \node {hw\homeworknumber\_imageclassifier\_skeleton}
+    % child { node [selected] {homework/template}
+    %   child { node [selected] {cnn.py}}
+    %   child { node [selected] {mlp.py}}
+    %   child { node [selected] {optimizers.py}}
+    %   child { node [selected] {subspace.py}}
+    %   child { node [optional] {any\_others.py}}
+    % }
+    % child [missing] {}
+    % child [missing] {}
+    % child [missing] {}
+    % child [missing] {}
+    % child [missing] {}
+    child { node [selected] {ReadMe}}
+    child { node {download.py}}
+    % child { node {datasets.py}}
+    %child { node {structures.py}}
+    child { node [selected] {models.py}}
+    child { node {optimizers.py}}
+    child { node [core] {main.py}}
+    child { node {interface.sh}}
+    child { node {visualize.py}}
+    child { node {scholar.sh}};
+\end{tikzpicture}
+
+\hfill
+
+\begin{itemize}
+% \item \textbf{[your\_purdue\_login]\_hw\homeworknumber}: the top-level folder that contains all the files
+%           required in this homework. You should replace the file name with your
+%           name and follow the naming convention.
+\item \textbf{hw\homeworknumber\_imageclassifier\_skeleton}: the top-level folder that contains all the files
+          required in this task.
+
+
+\item \textbf{ReadMe}: Your ReadMe should begin with a couple of \textbf{example commands}, e.g., "python hw\homeworknumber.py data", used to generate the outputs you report. TA would replicate your results with the commands
+          provided here. More detailed options, usages and designs of your
+          program can be followed. You can also list any concerns that you
+          think TA should know while running your program. Note that put the
+          information that you think it's more important at the top. Moreover,
+          the file should be written in pure text format that can be displayed
+          with Linux "less" command.
+          You can refer to interface.sh for an example.
+
+\item \textbf{main.py}: The \underline{main executable} to run training with CNN and G-invariant CNN.
+\item \textbf{download.py}: The \underline{executable script} to download all essential data for this homework.
+\item \textbf{visualize.py}: The \underline{executable script} to render plots for your results.
+          It can give you a better understanding of your implementations.
+
+\item \textbf{interface.sh}: The executable bash script to give you examples of main.py usage. It also works as an example for writing ReadMe.
+
+%\item \textbf{structures.py}: The module defines different dataset transformations for this homework.
+%          It defines two groups of image operations: rotation and flip.
+%          Besides, it is also an \underline{executable script} to generate invariant basis for this homework.
+
+\item \textbf{models.py}: \underline{\bf You will need to implement} the necessary functions in this file as homework. This module defines the CNN and G-Invariant CNN models. 
+
+\item \textbf{optimizers.py}: The module defines the customized optimizers for this homework.
+        An existing SGD implementation is already provided for you.
+
+\item \textbf{scholar.py:} A utility bash script to help you submit the Python process to a GPU compute node.
+
+
+The module that you are going to develop:
+\begin{itemize}
+\item \textbf{models.py}
+\end{itemize}
+The detail will be provided in the task descriptions. All other modules are just there for your convenience. It is not requried to use them, but exploring that will be a good practice of re-using code. Again, you are welcome to architect the package in your own favorite. For instance, adding another module, called \texttt{utils.py}, to facilitate your implementation.
+
+\end{itemize}
+
+
+\subsubsection*{Q3.b Data: MNIST}
+
+You are going to conduct a simple classification task, called MNIST (\url{https://huggingface.co/datasets/ylecun/mnist}). It classifies images of hand-written digits (0-9). Each example thus is a \(28 \times 28\) image. 
+\begin{itemize}
+\item The full dataset contains 60k training examples and 10k testing examples.
+\item We provide \textbf{download.py} that will automatically download the data. Make sure that torchvision library is available.
+\end{itemize}
+
+
+\noindent Related Modules: 
+\begin{itemize}
+% \item hw\homeworknumber\_minibatch.py 
+% \item my\_neural\_networks/optimizers.py
+% \item (to modify) template/model.py
+% \item (to modify) template/subspace.py
+% \item (to create) my\_neural\_networks/CNN\_networks.py
+% \item (to create)  my\_neural\_networks/shuffled\_labels.py
+\item main.py 
+\item models.py
+\end{itemize}
+
+
+\newpage
+\subsubsection*{Q3.c Action Items:}
+\begin{enumerate}
+
+
+\item {\bf (0.5 pt)} (In the code) Follow the  the Pytorch implementation CNNNet given in lecture\\
+{\small \url{https://www.cs.purdue.edu/homes/ribeirob/courses/Spring2025/lectures/07cnn/CNNs.html}}\\
+to create a CNN with 2 convolutional layers with max pooling in {\bf models.py} using default parameters (convolution kernel size 5, stride 1; padding size 3; pooling kernel size 2, stride 2) followed by 3 fully-connected linear layers (your code should be able to automatically calculate for the input dimension of the first linear layer when kernel size and stride is changing).\\
+{\bf Optimize using the standard SGD}. 
+Run {\bf main.py} with command line argument \verb|--cnn| so it will run the CNN code. (\verb|python main.py --cnn|, one example to run with GPU is \verb|python main.py --cnn|\\ \verb|--batch-size 100 --device cuda|, see full example in \texttt{interface.sh}) \\
+{\bf (In the PDF report on Gradescope)} 
+Describe the neural network architecture and its hyper-parameters: layers, type of layer, number of neurons on each layer, the activation functions used, and how the layers connect. 
+
+The convolutional neural network (CNN) consists of two convolutional layers 
+followed by fully connected layers. The detailed architecture and hyperparameters are 
+described as follows:
+
+\begin{itemize}
+    \item \textbf{Input:} The input to the network is a grayscale image of size 
+    \(28 \times 28\).
+    
+    \item \textbf{Convolutional Layers:} 
+    \begin{itemize}
+        \item \textbf{First Convolutional Layer:} Applies \(C_1\) filters of 
+        size \(5 \times 5\) with a stride of 1 and padding to preserve spatial 
+        dimensions. A ReLU activation function is used.
+        
+        \item \textbf{Second Convolutional Layer:} Applies \(C_2\) filters of 
+        size \(5 \times 5\) followed by ReLU activation.
+        
+        \item \textbf{Pooling:} A max-pooling layer of size \(2 \times 2\) is 
+        applied after each convolutional layer to reduce spatial dimensions.
+    \end{itemize}
+    
+    \item \textbf{Flattening:} The output feature maps are flattened into a 
+    vector before passing to the fully connected layers.
+
+    \item \textbf{Fully Connected Layers:} 
+    \begin{itemize}
+        \item First dense layer: 300 neurons, ReLU activation.
+        \item Second dense layer: 100 neurons, ReLU activation.
+        \item Output layer: 10 neurons, softmax activation for classification.
+    \end{itemize}
+    
+    \item \textbf{Layer Connectivity:} The overall flow of data through the 
+    network follows:
+    
+    \begin{align*}
+    x &\rightarrow \text{Conv}_1 \rightarrow \text{ReLU} \rightarrow 
+    \text{Pool}_1 \rightarrow \text{Conv}_2 \rightarrow \text{ReLU} \\
+    &\rightarrow \text{Pool}_2 \rightarrow \text{Flatten} \rightarrow 
+    \text{FC}_1 \rightarrow \text{ReLU} \rightarrow \text{FC}_2 \rightarrow 
+    \text{ReLU} \rightarrow \text{Output}
+    \end{align*}
+    
+    \item \textbf{Optimization and Hyperparameters:} 
+    \begin{itemize}
+        \item \textbf{Optimizer:} Stochastic Gradient Descent (SGD).
+        \item \textbf{Batch size:} 100.
+        \item \textbf{Regularization:} Not applied in this implementation.
+        \item \textbf{Dropout:} Not included in this implementation.
+    \end{itemize}
+\end{itemize}
+
+\item {\bf (0.5 pt)} For a  $k \times k$  filter, the CNN considers $k \times k$
+image patches.  These image patches overlap according to stride, which is by how
+much each block must be separated horizontally and vertically.  If $k$ is not a
+multiple of the image height of width, we will need padding (increase image
+height (width) by adding a row (column) of zeros).
+% Modify these filters to (a) $3 \times 3$ with stride 3, and (b) $14 \times 14$
+% with stride 1.
+Modify the command line arguments \verb|--kernel| and \verb|--stride| to (a) $3
+\times 3$ with stride 3, and (b) $14 \times 14$ with stride 1.  
+(\verb|python main.py --kernel kernel --stride|\\ \verb|stride --cnn --batch-size 100|, 
+see full example in \texttt{interface.sh}) In the {\bf PDF report on Gradescope},
+show the test accuracy of the classifier over training and test data for items
+(a) and (b)..  Discuss your findings. Specifically, what could be the issue of
+having (a) $3\times 3$ filters with stride 3 and (b) $14 \times 14$ filters? \\
+
+The following table presents the test accuracy of the classifier when using 
+(a) $3\times 3$ filters with stride 3 and (b) $14 \times 14$ filters.
+
+\begin{table}[h]
+    \centering
+    \renewcommand{\arraystretch}{1.2}
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular}{|c|c|c|c|p{4.5cm}|}
+        \hline
+        \textbf{Filter Size \& Stride} & \textbf{Train Loss} & \textbf{Train Acc (\%)} & \textbf{Test Acc (\%)} & \textbf{Potential Issues} \\
+        \hline
+        $3\times 3$, Stride 3 & 1.5439 & 46.13 & 46.49 & Large stride lowers resolution, discarding key details, which may hurt performance. \\
+        \hline
+        $14\times 14$ & 0.3225 & 87.82 & 87.82 & Filters cover too much area, limiting local feature extraction and leading to less informative representations. \\
+        \hline
+    \end{tabular}
+    \caption{Test Accuracy and Issues with Different Filter Sizes}
+    \label{tab:filter_analysis}
+\end{table}
+
+From the results, we observe that:
+\begin{itemize}
+    \item \textbf{$3\times 3$ filters with stride 3:} The large stride 
+    reduces spatial resolution significantly, possibly discarding 
+    useful fine-grained details and impacting classification performance.
+    
+    \item \textbf{$14\times 14$ filters:} Filters are too large, covering 
+    nearly the entire image. This limits the ability to capture meaningful 
+    local structures, leading to overly generalized feature representations. 
+    Despite high accuracy, it may rely on global patterns rather than useful 
+    discriminative features. Another concern is prolonged training time.
+\end{itemize}
+
+This analysis highlights the importance of selecting appropriate filter sizes 
+and strides for effective feature extraction while preserving essential image details.
+
+
+\item {\bf (1.5 pt, equally distributed)} Deep neural networks generalization performance is not related to the network's inability to overfit the data. Rather, it is related to the solutions found by SGD. 
+In this part of the homework we will be testing that hypothesis.
+Please use {\bf 100 epochs} in the following questions.
+\begin{enumerate}
+\item Using the provided code with (kernel size $5$ and stride $1$), show a plot {\bf (in the PDF report on Gradescope)} with two curves: the training accuracy  and testing accuracy, with the x-axis as the number of epochs.  \\(\verb|python visualize.py --cnn|)
+
+\begin{figure}[h!]
+    \centering
+    \begin{minipage}[b]{\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{cnn_acc.png}
+        \caption{CNN Accuracy}
+        \label{fig:cnn_acc}
+    \end{minipage}
+    \hspace{0.05\textwidth}
+    \begin{minipage}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{shuffle_cnn_acc.png}
+        \caption{Shuffle CNN Accuracy}
+        \label{fig:shuffle_cnn_acc}
+    \end{minipage}
+\end{figure}
+
+The plot is shown in the left-most figure of \Cref{fig:cnn_acc}. The training
+accuracy increases steadily over the 100 epochs, reaching a high value of
+99.5\%.
+
+\item Now consider an alternative task: randomly shuffle the target labels (kernel size $5$ and stride $1$), so that the image (handwritten digit) and its label are unrelated. Show a plot with two curves: the training accuracy and validation accuracy, with the x-axis as the number of epochs.
+Add command line parameter \verb|--shuffle-label| so it will ran this shuffle-label CNN experiment with parameter . We use learning rate $1e-2$ in this case.
+(\verb|python main.py --shuffle-label --cnn --lr 1e-2|, and then \verb|python visualize.py --shuffle| see full example in \texttt{interface.sh}).\\
+{\bf (In the PDF report on Gradescope)} What can you conclude about the ability of this neural network to overfit the data? Would you say that the inductive bias of a CNN can naturally ``understand images'' and will try to classify all hand-written ``0''s as the same digit?
+
+Based on the figure and the results, we can conclude that the CNN model trained
+on the MNIST dataset with shuffled labels fails to generalize effectively. This
+is indicated by the low accuracy by the end of 100 epochs (11.3\%). This
+suggests that There exists a correct association between images and labels, and
+the presence of this association is crucial for the model to learn the true
+underlying patterns and generalize effectively. Therefore, we can conclude that
+the unshuffled model generalizes well, and learns to extract relevant features
+from the input images and generalize well to unseen samples.
+
+\begin{figure}[ht]
+    \centering
+    \subfigure[Accuracy (No Shuffle)]{
+        \includegraphics[width=0.45\textwidth]{acc_noshuffle_100_cnn_5_1.png}
+    }
+    \hfill
+    \subfigure[Accuracy (Shuffle)]{
+        \includegraphics[width=0.45\textwidth]{acc_shuffle_100_cnn_5_1.png}
+    } \\
+    \subfigure[Loss (No Shuffle)]{
+        \includegraphics[width=0.45\textwidth]{loss_noshuffle_100_cnn_5_1.png}
+    }
+    \hfill
+    \subfigure[Loss (Shuffle)]{
+        \includegraphics[width=0.45\textwidth]{loss_shuffle_100_cnn_5_1.png}
+    }
+    \caption{Accuracy and Loss Interpolated Against Model Weights: 
+    Comparison with and without Shuffling}
+    \label{fig:interp_weights_shuffle}
+\end{figure}
+
+\item Using the approach to interpolate the initial (random) and final parameters seen in class\\
+{\scriptsize\url{https://www.cs.purdue.edu/homes/ribeirob/courses/Spring2025/lectures/05optimization/Neural_Network_Trainingv2.html}}.\\
+{\bf (In the PDF report on Gradescope)}
+show the ``flatness'' plot of the original task and the task with shuffled labels over the training data. (We do not provide framework, and you should code by yourself from ground based on \verb|main.py|.) Can you conclude anything from these plots about the possible generalization performance of the two models?
+You just need to include the plots in the PDF (code is not required).
+
+\Cref{fig:interp_weights_shuffle} shows the interpolated accuracy and loss
+curves for the CNN model trained on the MNIST dataset with and without shuffled
+labels. The following observations can be made:
+
+When no shuffling is involved, the model generalizes well, as witnessed by the
+training and test accuracy curves closely tracking each other. In this case, it
+is fair to conclude that the inductive bias of the CNN model is effective in
+understanding images and classifying handwritten digits accurately. The model
+learns to extract relevant features from the input images and generalize well to
+unseen samples.
+
+When shuffling is involved, the model struggles to generalize, as indicated by
+the low accuracy achieved at the end of the training (11.3\%). The increasing
+gap between training loss and validation loss further suggests that the model
+has overfit the training data and fails to generalize to unseen samples. 
+
+
+\end{enumerate}
+
+\item {\bf (1.5 pts)}
+ Implement a CG-CNN (G-invariant CNN) (kernel size 5, stride 1; all settings are the same as CNN) that is jointly invariant to the following transformation groups: Horizontal \& vertical image flips and 90$^\circ$ rotations. Implement the missing functions in \texttt{models.py}.
+ You should first run \verb|python structures.py --size|\\
+ \verb|size| to achieve essential
+ eigenvectors of invariant subspace for those transformation groups where size should be a proper value for your CG-CNN.
+ It will save basis in file ``rf-size.npy''.
+ Then, in ``models.CGCNN'', you should load basis from the file, and implement
+ a CGCNN with 2 G-invariant CNN layers constructed by given eigenvectors with proper pooling and a 3-layer MLP. In this part, you should run CNN and CGCNN on the rotated-flip test data with \verb|python main.py --cnn --rot-flip| and \\\verb|python main.py --cgcnn --rot-flip| (Full example is in \texttt{interface.sh}). Report the training and test accuracy results for CNN and CGCNN in the {\bf PDF report on Gradescope}. Can you see the difference between training and test performance for both models and explain the reason?
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Train Accuracy} & \textbf{Test Accuracy} \\
+\hline
+CNN & 0.976950 & 0.344800 \\
+\hline
+CGCNN & 0.729417 & 0.498700 \\
+\hline
+\end{tabular}
+\caption{Training and Test Accuracy Results for CNN and CGCNN}
+\label{table:accuracy_results}
+\end{table}
+
+\paragraph{Analysis}
+
+The CNN achieves a high training accuracy of 97.70\%, but its test accuracy
+drops significantly to 34.48\%. This suggests severe \textbf{overfitting}, where
+the model memorizes the training data but fails to generalize to unseen samples.
+The large gap between training and test accuracy indicates poor generalization,
+possibly due to insufficient regularization or an overly complex model.
+
+On the other hand, CGCNN exhibits a more balanced performance, with invariant
+kernels over the 16 transformations, and an averaging operation performed on the
+kernel values prior to the fully connected layer. The model achieves a training
+accuracy of 72.94\% and a test accuracy of 49.87\%. Comparing to the CNN, the
+training accuracy is lower by the end of the 50 epochs, possibly due to the
+averaging operation in the forward pass causing the model to learn more
+generalizable features. On the other hand, the test accuracy of CGCNN is higher
+thant that of CNN, suggesting that the CGCNN is less prone to overfitting than
+the CNN, and is more invariant to transformations such as rotation and flipping.
+
+However, the CGCNN model still struggles to generalize effectively, likely due
+to the following reasons:
+
+\begin{enumerate}
+    \item \textbf{Overfitting}: The model could be memorizing the training data
+    rather than learning generalizable features, leading to poor performance on
+    unseen test data.
+    \item \textbf{Lack of Regularization}: The model may not be sufficiently
+    regularized, meaning it lacks mechanisms like dropout or weight decay to
+    help prevent overfitting.
+    \item \textbf{Inherent Symmetry in Data}: The MNIST dataset contains numbers
+    that are inherently invariant to certain transformations (e.g., rotations
+    and flips, such as number 6 and 9). The CGCNN may not be effectively
+    leveraging these symmetries to improve generalization.
+\end{enumerate}
+
+\end{enumerate}

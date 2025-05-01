@@ -1,0 +1,628 @@
+\question{%
+    GNN for Link Prediction (8.0 pts)
+}
+
+% Space.
+%
+% Introduction.
+%
+\noindent
+%
+We are going implement Graph Convolutional Network (GCN) as described next.
+
+The rule of thumbs is that you can do any changes in the \texttt{homework\homeworknumber\_gnn\_skeleton/stru%
+ctures} and \texttt{homework\homeworknumber\_gnn\_skeleton/models} files (not changing their names), but need
+to \textbf{keep the main executable, such as \texttt{mai%
+n-ddi.py}, untouched}.
+%
+That is, you can change any function you want in the code provided inside the
+folder \texttt{homework/structures}, \texttt{homework/models} and add extra
+files.
+%
+But all other files in the root folder should remain intact on submission and
+the code should execute in the scholar cluster via \texttt{interface.sh}.
+
+% Space.
+%
+\hfill
+
+% Download skeleton.
+%
+\noindent \textbf{Skeleton Package:}
+%
+A skeleton package is available on Brightspace.
+%
+You should be able to download it and use the folder structure provided.
+%
+\textbf{A GPU is essential for some of the tasks, thus make sure you follow the
+instruction to set up the GPU environment on scholar.rcac.purdue.edu.}
+%
+
+% 
+You can reuse your \texttt{CS587} conda environment created for previous homework. If you need to recreate this environment, here are the commands:
+
+
+\begin{verbatim}
+module load anaconda/2024.02-py311
+conda create -n CS587 python=3.11 ipython ipykernel -y
+conda activate CS587
+pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cu121
+pip install scikit-learn seaborn more-itertools matplotlib 
+\end{verbatim}
+
+As always, we provide a Slurm batch submission script called \texttt{scholar.sh} in the skeleton code. You can use it to submit \emph{any} command lines to a GPU computing nodes. For instance, suppose the original command to run a python training script is \texttt{python main.py data}, then if run the following:
+\begin{verbatim}
+sbatch scholar.sh python main.py data
+\end{verbatim}
+Then the same job will be submitted to a GPU backend node. 
+
+
+% Homework framework overview.
+%
+\subsubsection*{Q2.a HW Overview}
+You are going to fill in a few new components into the homework\homeworknumber\_gnn\_skeleton package.
+\\
+%
+\noindent The zip file should have the following folder structure:
+
+% Skeleton figure.
+%
+\tikzstyle{every node}=[draw=black,thick,anchor=west]
+\tikzstyle{selected}=[draw=red,fill=red!30]
+\tikzstyle{core}=[draw=blue,fill=blue!30]
+\tikzstyle{optional}=[dashed,draw=red,fill=gray!50]
+%
+\begin{tikzpicture}[%
+    grow via three points={
+        one child at (0.5,-0.7) and two children at (0.5,-0.7) and (0.5,-1.4)
+    },
+    edge from parent path={(\tikzparentnode.south) |- (\tikzchildnode.west)}
+]
+%
+    \node {hw\homeworknumber\_ gnn\_skeleton}
+    child {
+        node {structures}
+        child {node {ddi.py}}
+        child {node {meta.py}}
+        child {node [optional] {any\_others.py}}
+    }
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child {
+        node [selected] {models}
+        child {node {model.py}}
+        child {node [selected] {gcn.py}}
+        child {node [optional] {any\_others.py}}
+    }
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child [missing] {}
+    child {node [selected] {ReadMe}}
+    child {node [selected] {inspect\_ddi.py}}
+    child {node {utils.py}}
+    child {node [core] {main\_ddi.py}}
+    child {node {download.py}}
+    child {node {scholar.sh}}
+    child {node {interface.sh}};
+\end{tikzpicture}
+
+% Space.
+%
+\hfill
+
+% Skeleton description.
+%
+\begin{itemize}
+%
+\item
+    \textbf{hw\homeworknumber\_gnn\_skeleton:}
+    %
+    the top-level folder that contains all the files required in this homework.
+%
+\item
+    \textbf{ReadMe:}
+    %
+    \underline{You will need to fill in this file}. Your ReadMe should begin with a couple of \textbf{execution commands},
+    e.g., ``python hw\homeworknumber.py data'', used to generate the outputs
+    you report.
+    %
+    TA would replicate your results with the commands provided here.
+    %
+    More detailed options, usages and designs of your program can be followed.
+    %
+    You can also list any concerns that you think TA should know while running
+    your program.
+    %
+    Note that put the information that you think it's more important at the
+    top.
+    %
+    Moreover, the file should be written in pure text format that can be
+    displayed with Linux ``less'' command.
+    %
+    You can refer to \texttt{interface.sh} for an example.
+
+%
+\item
+    \textbf{inspect\_ddi.py:}
+    %
+    \underline{You will need to fill in this file}. This script inspects the DDI dataset's statistics.
+
+%
+\item
+    \textbf{utils.py:}
+    %
+    Utility functionalities used in main execution files.
+    \textbf{meta.py:}
+    %
+    Contains the base class of datasets.
+
+\item
+    \textbf{main\_ddi.py:}
+    %
+    The \underline{main executable} to run GCN on DDI dataset.
+    %
+\item
+    \textbf{scholar.sh:}
+    %
+    A utility script to help you submit jobs to GPU nodes. Run it via \texttt{sbatch scholar.sh python ...}
+%
+\item
+    \textbf{download.py:}
+    %
+    The executable python script to download all essential datasets.
+    %
+    You only need to run it once, and it will automatically download essential
+    datasets under \texttt{data} folder.
+%
+\item
+    \textbf{structures:}
+    %
+    The module defines different dataset structures for this homework.
+    %
+    It provides following dataset structures in different files:
+    %
+    \begin{itemize}
+    %
+    \item
+        \textbf{ddi.py:} DDI dataset abstraction.
+    %
+    \end{itemize}
+%
+\item
+    \textbf{models:}
+    %
+    The module defines all neural network models for this homework.
+    %
+    It provides following models in different files:
+    %
+    \begin{itemize}
+    %
+    %
+    \item
+        \textbf{gcn.py:} \underline{You will need to fill in this file}. The GCN model.
+    %
+    \end{itemize}
+    %
+    You will need to fill in missing parts in those files.
+    %
+    Details will be provided in the description of each task.
+    %
+    Again, you are welcome to design the code inside \texttt{models} in your
+    own way, as long as the code works with \texttt{main-*.py} and does what it is supposed to do.
+    %
+    For instance, you can add another file, called \texttt{utils.py}, to
+    facilitate your implementation.
+%
+\end{itemize}
+
+% Space.
+%
+
+% Introduction.
+%
+In the following GNN related coding assignment, you will work with the
+Drug-Drug Interaction (DDI) dataset.
+%
+The DDI dataset consists of 4,267 drugs, and 1,334,889 interaction links.
+%
+The raw DDI dataset is undirected and unattributed.
+%
+We augment the edge weights by the inverse root of degree product of its two
+nodes ($\mA_{i, j} = 1 / \sqrt{d_{i} d_{j}}$ for edge $(i, j)$, where $d_{i},
+d_{j}$ are node degrees).
+
+% Introduction.
+%
+You can regard it as a graph $G = (V, E, \mX, \mA)$ where $V = \{1, 2, \cdots,
+4267\}$ is the set of $n = 4267$ nodes, $E$ is the set of 1,334,889 undirected
+edges, $\mX$ and $\mA$ are the feature and weight matrices assigned to the
+graph.
+%
+Although the raw dataset has no node attributes, we will regard it as an
+attributed graph for convenience.
+%
+For each node $v \in V$, we have a feature vector $\vx_{v}$.
+For each edge $(u, v) \in V$, we have a weight $\mA_{u, v}$.
+For pair $(u, v)$ which is not an edge, $\mA_{u, v} = 0$.
+%
+Thus, you will have
+%
+\begin{align}
+%
+    \mX = \begin{bmatrix}
+        \vx_{1} \\
+        \vx_{2} \\
+        \vdots \\
+        \vx_{n}
+    \end{bmatrix} \quad \mA = \begin{bmatrix}
+        \mA_{1, 1} & \cdots & \mA_{1, n} \\
+        \mA_{2, 1} & \cdots & \mA_{2, n} \\
+        \vdots & \ddots & \vdots \\
+        \mA_{n, 1} & \cdots & \mA_{n, n}
+    \end{bmatrix},
+%
+\end{align}
+%
+where each $\vx_{u}$ is a 256 dimensional vector and $\mA$ is a $4267 \times
+4267$ matrix.
+
+% Space.
+%
+\hfill
+
+% Introduction.
+%
+In GCN of this project, features of nodes and their neighbors will be
+aggregated together from layer $k$ to next layer $k + 1$:
+%
+\begin{align}
+\label{eqn:gcn}
+%
+    \mH^{(k + 1)} = \text{ReLU}\big( \mA \mH^{(k)} \mW^{(k)} + \vb^{(k)}\big)
+%
+\end{align}
+%
+where $\mH^{(k)}$ is the embedding features at GCN layer $k$, $\mW^{(k)}$ and
+$\vb^{(k)}$ are weight matrix and bias vector of layer $k$.
+$\mH^{(0)} = \mX$ is a corner case.
+%
+The final embedding matrix will then be used to predict if a link exists
+between arbitrary node $u, v$ for graph $G$.
+%
+\begin{align*}
+%
+    P(\text{$(u, v)$ exists}) = \text{Sigmoid}(\text{MLP}(\mH^{(2)}_{u} \odot
+    \mH^{(2)}_{v})).
+%
+\end{align*}
+
+% Space.
+%
+\hfill
+
+% Related modules.
+%
+\noindent Related Modules:
+%
+\begin{itemize}
+%
+\item
+    models/gcn.py
+\item
+    main\_ddi.py
+%
+\end{itemize}
+
+% Space.
+%
+\hfill
+
+% Files to work on.
+%
+\subsubsection*{Q2.b Action Items:}
+%
+\begin{enumerate}
+%
+\item
+    (1 pts)
+    The formula above is designed via matrix multiplications (which is efficient if $\mA$
+    is a dense matrix).
+    %
+    In this quetion, we will do something more efficient for sparse matrices $\mA$.
+    %
+    To be specific, for an arbitary node $v$, you only have access to its
+    neighbor set $\mathcal{N}(v) = \{u | (u, v) \in E \}$.
+    %
+    \textbf{%
+        Rewrite the above formula from \Cref{eqn:gcn} as a new function
+        $\overline{f}$ that $\mH^{(k + 1)}_{v} = \text{ReLU}\big( \overline{f}
+        \big( v, \mH^{(k)}, \mathcal{N}(v), \mW^{(k)}, \vb^{(k)}\big) \big)$
+    }
+
+    $\overline{f} \big( v, \mH^{(k)}, \mathcal{N}(v), \mW^{(k)}, \vb^{(k)}\big) \big) = (\sum_{u \in \mathcal{N}(v)} A_{v,u} H_u^{(k)} W^{(k)}) + b^{(k)}$
+
+    where $A_{v,u}$ is the weight of edge $(v,u)$, $H_u^{(k)}$ is the embedding
+    of node $u$ at layer $k$, and $W^{(k)}$ is the weight matrix of layer $k$.
+    The sum is over all neighbors of node $v$ in the graph. The bias term
+    $b^{(k)}$ is added to the result after the summation.
+%
+
+\item
+    (2 pts)
+    It is important to first understand the task, the training loss, and the evaluation procedure. Link prediction is a self-supervised task, meaning at training time, we split the given training graph into ``observe'' and ``target'' subgraphs. The task of the GCN is to take the ``observe'' subgraph as the input, and attempt to predict the existence of edges in the ``target'' subgraph. At test/inference time, we provide the entire training graph as input, and check if the model is able to predict those validation or test edges. Carefully study the \texttt{train()} and \texttt{evaluate()} methods in \texttt{main\_ddi.py}.
+
+    \begin{enumerate}
+
+        \item (0.5 pts) Are the edges in the training ``target'' subgraphs the
+        only ``label'' edges where we compute the GCN model's score (i.e. $P((u,
+        v) \text{~exists})$)? Would there be potential issues if our training
+        objective is to only increase the model's likelihood on these edges? If
+        not, argue why. If so, describe a concrete scenario in which the model
+        may satisfy the training objective but fails to generalize. 
+
+        No, If the model is trained only to increase the likelihood of these
+        edges, it could trivially satisfy the objective by assigning high
+        probability to \emph{all} node pairs--including many that are not
+        actual edges. This would result in a model that performs well on the
+        training objective but generalizes poorly due to a high number of false
+        positives. To prevent this, we must include \emph{negative edges} (i.e.,
+        randomly sampled non-edges) during training, so that the model learns to
+        assign high probability only to true edges and low probability to false
+        ones.
+        
+        \item (0.5 pts) Following the previous question. Look into the
+        \texttt{negative\_sampling()} method. Describe what it does. What is the
+        support set of the sampling (i.e. over which set of things does it
+        sample from)? Is it the set of all node tuples $\mathcal{V}^2$? 
+
+        The \texttt{negative\_sampling()} method samples negative edges from the
+        training graph. It does this by randomly selecting pairs of nodes from
+        the set of all nodes in the training graph, and checking if the edge
+        between them exists in the training graph. If it does not exist, the
+        pair is added to the list of negative edges. The support set of the
+        sampling is the set of all possible node pairs in the training graph,
+        which is indeed the set of all node tuples $\mathcal{V}^2$. The method
+        ensures that the sampled negative edges are not present in the training
+        graph, thus providing a valid set of negative samples for training.
+
+        \item (0.5 pts) Look at how the loss is computed in \texttt{train()}.
+        Denote $\mathbf{A}_{\text{obs}}$ the adjacency matrix of the ``observe''
+        training subgraph and $\mathbf{A}_{\text{tgt}}$ the adjacency matrix of
+        the ``target'' training subgraph. You can write $\mathbf{H} =
+        \text{GCN}(\mathbf{A}_{\text{obs}}, \mathbf{X}; \mathbf{W}) \in
+        \mathbb{R}^{|V| \times d}$ the output node embeddings of GCN. Write down
+        the mathematical expression for the training loss
+        $\mathcal{L}(\mathbf{W})$.
+
+        The training loss $\mathcal{L}(\mathbf{W})$ is computed as the sum of the
+        binary cross-entropy loss (negative log likelihood) for the positive edges in the target subgraph
+        and the negative edges sampled from the training graph. Mathematically, it
+        can be expressed as:
+        \begin{align*}
+            \mathcal{L}(\mathbf{W}) = -\frac{1}{|\mathcal{E}_{\text{tgt}}|} \sum_{(u, v) \in \mathcal{E}_{\text{tgt}}} \log P((u, v) \text{~exists}) - \frac{1}{|\mathcal{E}_{\text{neg}}|} \sum_{(u, v) \in \mathcal{E}_{\text{neg}}} \log (1 - P((u, v) \text{~exists}))
+        \end{align*}
+
+        \item (0.5 pts) Now take a look at the evaluation. \texttt{Hits@20} will
+        be the evaluation metrics we use. Describe mathematically how it is
+        computed.
+
+        Hits@20 is computed as the percentage of positive edges in the test that
+        scored higher than the 20th highest scored negative edge. Mathematically, it can be described as
+        \begin{align*}
+            \text{Hits@20} = \frac{1}{|\mathcal{E}_{\text{test}}|} \sum_{(u, v) \in \mathcal{E}_{\text{test}}} \mathbf{1}\left(P((u, v) \text{~exists}) > P((u', v') \text{~exists})\right)
+        \end{align*}
+
+        where $(u', v')$ are the 20 highest scored negative edges. The indicator
+        function $\mathbf{1}(\cdot)$ is 1 if the condition is true and 0
+        otherwise. The sum is taken over all positive edges in the test set
+        $\mathcal{E}_{\text{test}}$.  The final Hits@20 score is the average of
+        these indicator values, giving the proportion of positive edges that
+        scored higher than the 20th highest scored negative edge.
+
+    \end{enumerate}
+
+\item
+    (1 pts)
+    In this part we shall compute the dataset statistics, in particular the DDI graph's degree distribution, to get a better understanding of the dataset. Specifically, your task is to understand \texttt{inspect\_ddi.py} and fill in the \texttt{compute\_degrees()} and (optionally) the \texttt{concatenate\_edges()} functions.
+    \\
+    In many graph dataset, we represent the graph via \textbf{edge indices} instead of dense square adjacency matrices for efficient storage. Namely, given $|V|$ number of nodes, the edge indices is a list of all edges $[e_{1}, e_{2}, \cdots]$ where $e_{n} = (u_n, v_n) \in E$. The full edge index list (variable \texttt{edge\_indices\_all}) is then split into the train, valid, and test edge index lists (variable \texttt{edge\_pos\_train}, \texttt{edge\_pos\_valid}, \texttt{edge\_pos\_test}, respective). Note that the DDI graph is \textbf{undirected}, but these variables contain only one direction of the edge, i.e., if $(u, v) \in$  \texttt{edge\_pos\_train}, then $(v, u) \not\in$ \texttt{edge\_pos\_train}. Thus, one way to compute the degrees is first to concatenate the original edge index list with the reversed edge index list (hence the role of \texttt{concatenate\_edges()}), and then compute the ``in-degree'' (the role of \texttt{compute\_degrees()}). 
+    \\
+    Specifically, let $E^r$ be the set of reversed edge tuples of $E$. Then, the in-degree of arbitrary node $v \in V$ is $d_{v} = |\{(i, v): (i, v) \in E\}|$.
+    The minimum of node in-degrees is $\min(\{d_{v} | v \in V\})$; The maximum
+    of node in-degrees is $\max(\{d_{v} | v \in V\})$; and the average of node
+    in-degrees is $\sum_{v \in V} d_{v} / |V|$.
+    \\
+    Run the script via \texttt{python inspect\_ddi.py}. Then,
+    \newpage
+    \begin{enumerate}
+        \item (0.25 pts) The script shall generate a plot under \texttt{plots/degree\_histogram.pdf}, in which it contains 3 subplots. Report this plot in your PDF report.
+        \begin{figure}[h!]
+            \centering
+            \includegraphics[width=\linewidth]{plot.pdf}
+        \end{figure}
+        \item (0.25 pts) Based on the generated plots, how do you think the node degrees are distributed? Namely, does the node count - node degree curve follow a linear relationship, logarithmic relationship, or logarithmic-logarithmic relationship?
+
+        Logarithmic relationship, as we can approximately fit a line to the
+        log-scale plot.
+
+        \item (0.5 pts) The script will also report the max/min/average degrees for the train/valid/test splits. Report the statistics in \Cref{tab:indeg}.
+    \end{enumerate}
+% Table example.
+%
+
+\begin{table}[h!]
+\caption{\textbf{Node In-degree Statistics}.}
+\label{tab:indeg}
+\begin{center}
+\centering
+\begin{tabular}{l|rrr}
+    \hline
+    & Min & Max & Average
+    \\
+    \hline
+    Training & 1.0 & 2234.0 & 500.544
+    \\
+    \hline
+    Validation & 0.0 & 247.0 & 62.568
+    \\
+    \hline
+    Test & 0.0 & 453.0 & 62.568
+    \\
+    \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+%
+\item
+    (1 pt)
+    Now, we will use GCNs to learn node representations for link prediction
+    tasks.
+    %
+    First, you need to fill in the missing parts in \texttt{models.GCN}
+    according to the formula in the first question.
+    Pay attention to use sparse matrix operation, and also make sure that you understand \texttt{models.GCN.degree\_normalizor()} method.
+    %
+    Run the \texttt{main\_ddi.py} with default arguments: \verb|python main_ddi.py|.
+    %
+    Save the logging outputs from your console, and report \texttt{Test Hits@2%
+    0} you achieved at the last line. \\(To use the server, run \verb|sbatch scholar.sh python main_ddi.py --device cuda|. Make sure to specify \texttt{--device cuda} to leverage GPU.)
+
+    After implementing the missing components in \texttt{models.GCN} using
+    sparse matrix operations and ensuring proper degree normalization via
+    \texttt{degree\_normalizor()}, I executed the model with the default
+    arguments using \texttt{python main\_ddi.py}. The final reported performance
+    on the test set is:
+    \[
+    \texttt{Test Hits@20} = 0.01869
+    \]
+
+This value corresponds to the last line of the logging output in the console.
+
+
+%
+\item 
+    (1 pt)
+    The default training pipeline trains the model on a pre-defined ``observe'' subgraph and ``target'' subgraph, where the target positive edges are fixed between epochs. A better approach is to randomly re-sample the ``target`` subgraph from the training graph. This is implemented for you in the training script. \\
+    Run the \texttt{main\_ddi.py} with random masking: \verb|python main_ddi.py --random-mask|.
+    Save the logging outputs from your console, and report \texttt{Test Hits@2%
+    0}. Compare the results with the previous question, and write down your observation.
+
+    I ran the training script with random masking enabled using the command:
+\[
+\texttt{python main\_ddi.py --random-mask}
+\]
+This allows the model to re-sample the ``target'' subgraph in each epoch, which helps improve generalization. The final reported performance on the test set is:
+
+\[
+\texttt{Test Hits@20} = 0.01980
+\]
+
+Compared to the previous result of \texttt{Hits@20} = 0.01869 using a fixed target subgraph, the performance slightly improved. This suggests that randomly re-sampling the target subgraph during training can provide better supervision and lead to more robust node embeddings for link prediction.
+    
+%
+\item
+    (2.0 pt)
+    In the previous question, all the node feature $\vx_{u}$ are the same
+    vector (all-one vector) since the graph is unattributed.
+    We call node representations achieved from this assumption \emph{structural
+    node representations} since two nodes of the same topology in the graph
+    will get the same representations even if they are two different nodes in
+    the graph.
+    In the contrast, \emph{postional node representations} will assign
+    different nodes with different representations.
+    In the homework, we simply make node feature $\vx_{u}$ be learnable for all
+    nodes to get postional node representations for link prediction.
+    Run the \texttt{main.py} with arguments:
+    \verb|python main.py --positional|.\\
+    %
+    \begin{enumerate}
+        %
+        \item (0.5 pts)
+        Save the logging outputs from your console, and report \texttt{Test Hi%
+        ts@20} you achieved at the last line.
+
+
+        I ran the training script with positional node representations using the command:
+\[
+\texttt{python main.py --positional}
+\]
+This enables each node to learn its own distinct embedding, allowing the model to break symmetry between nodes with similar topology. The final result reported at the last line of the console output was:
+\[
+\texttt{Test Hits@20: } 0.46354
+\]
+
+        %
+        \item (0.5 pts)
+        Collect the validation performance (Hits@20) from log files for both
+        structural (ddi\_structure.ptlog) and positional (ddi\_position.ptlog)
+        representations under \texttt{ptlog} directory. Compare the two and report your observations.
+        %
+
+        The structural representation (from the file
+        \texttt{ddi\_structure.ptlog}) oscillated around a low value of 0.013 to
+        0.014, achieving a final 0.01869 for Hits@20, while the positional
+        representation (from the file \texttt{ddi\_position.ptlog}) gradually
+        improved from 0.13 to 0.4, achieving a much higher value of around
+        0.46354 for Hits@20. This indicates that the positional representation
+        is significantly more effective for link prediction tasks compared to
+        the structural representation.
+
+        \item (0.5 pts)
+        %
+        {\bf Explain mathematically why one is significantly better than the other.} In particular, you should think of a toy example graph on which one model would be more expressive than the other in theory. Show why it is the case on this toy example graph.
+        %
+
+        The structural representation is limited in its expressiveness because
+        it treats all nodes with the same topology as identical, regardless of
+        their actual identities. For example, in a simple graph with two nodes
+        $A$ and $B$ connected by an edge, the structural representation would
+        assign the same embedding to both nodes, as they have the same degree.
+        This means that the model cannot distinguish between the two nodes,
+        leading to a loss of information about their individual roles in the
+        graph.  In contrast, the positional representation assigns different
+        embeddings to nodes based on their identities, allowing the model to
+        capture the unique characteristics of each node. For example, in the
+        same graph with nodes $A$ and $B$, the positional representation would
+        assign different embeddings to the two nodes, allowing the model to
+        learn that $A$ and $B$ are distinct entities with potentially different
+        roles in the graph. This allows the model to capture more complex
+        relationships between nodes and leads to better performance on link
+        prediction tasks.
+
+        \item (0.5 pts)
+        Finally, run the positional GCN with random masking: \\
+        \verb|python main.py --positional --random-mask|. Compare the result with the previous question. Report your observations.
+
+        I ran the training script with positional node representations and
+        random masking enabled using the command:
+        \[
+        \texttt{python main.py --positional --random-mask}
+        \]
+
+        This allows the model to re-sample the ``target'' subgraph in each epoch
+        while also using positional node representations. The final reported
+        performance on the test set is:
+
+        \[
+        \texttt{Test Hits@20} = 0.5219
+        \]
+
+        This is a slight improvement over the previous result of \texttt{Hits@20} =
+        0.46354 using positional representations without random masking. This suggests
+        that combining positional representations with random masking during training
+        can further enhance the model's ability to generalize and improve its
+        performance on link prediction tasks.
+
+        %
+    \end{enumerate}
+%
+\end{enumerate}
+
+
+
+

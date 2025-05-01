@@ -1,0 +1,265 @@
+%%
+% homework template
+%
+
+
+\documentclass{article}
+
+%\usepackage{enumitem}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{epstopdf}
+\usepackage{enumerate}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage{url}
+\usepackage{mathtools}
+
+\usepackage{dsfont}
+\usepackage{tikz}
+\usetikzlibrary{trees}
+\usetikzlibrary{arrows,positioning,shapes.multipart}
+\usepackage{makecell}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{listings}
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{tikz}
+\usetikzlibrary{trees}
+\usepackage{makecell}
+\usepackage{listings}
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{xspace}
+
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable} % to allow boxes to break across pages
+
+% Define a new answer box environment with an optional height parameter.
+\newtcolorbox{answerbox}[1][]{%
+  breakable,
+  colback=white,       % Background color
+  colframe=black,      % Border color
+  boxrule=0.5pt,       % Border thickness
+  sharp corners,       % Box style
+  before skip=10pt,    % Space before the box
+  after skip=10pt,     % Space after the box
+  % Allow adjustable height via an optional parameter (default: 3cm)
+  height=\dimexpr\ifx#1\empty 3cm\else #1\fi\relax,
+}
+
+\usetikzlibrary{arrows,positioning,shapes.multipart}
+
+\graphicspath{{./hw4/}}
+
+
+\newcommand{\class}{ CS58700-DPL Spring 2025 }
+\newcommand{\website}{{\tiny\url{https://www.cs.purdue.edu/homes/ribeirob/courses/Spring2025/index.html}}}
+\newcommand{\homeworknumber}{4}
+\newcommand{\duedate}{ {\bf 6:00pm}, April 20th (open until 6:00am April 21st)}
+\newcommand{\code}{CODECODECODE}
+
+%\pagestyle{headings}
+\setlength{\parskip}{1pc}
+\setlength{\parindent}{0pt}
+\setlength{\topmargin}{-1pc}
+\setlength{\textheight}{8.5in}
+\setlength{\oddsidemargin}{0pc}
+\setlength{\evensidemargin}{0pc}
+\setlength{\textwidth}{6.5in}
+
+\newcommand{\var}{\mbox{var}}
+\newcommand{\cov}{\mbox{cov}}
+
+\newcommand{\mA}{\bm{A}}
+\newcommand{\mH}{\bm{H}}
+\newcommand{\mW}{\bm{W}}
+\newcommand{\mX}{\bm{X}}
+\newcommand{\mY}{\bm{Y}}
+
+\newcommand{\vb}{\bm{b}}
+\newcommand{\vc}{\bm{c}}
+\newcommand{\vh}{\bm{h}}
+\newcommand{\vm}{\bm{m}}
+\newcommand{\vx}{\bm{x}}
+\newcommand{\vz}{\bm{z}}
+
+\newcommand{\train}{\text{(tr)}}
+\newcommand{\test}{\text{(te)}}
+\newcommand{\source}{\text{(source)}}
+\newcommand{\target}{\text{(target)}}
+
+
+\newcommand*\dbar[1]{\overline{\overline{\lower0.2ex\hbox{$#1$}}}}
+\newcommand{\harrow}[1]{\mathstrut\mkern2.5mu#1\mkern-11mu\raise1.6ex\hbox{$\scriptscriptstyle\rightharpoonup$}}
+
+\newcommand{\newpart}{
+\stepcounter{partno}
+\noindent
+{\bf (\alph{partno})}
+}
+
+\newcommand{\header}{
+\newpage
+\noindent
+\framebox{ \vbox{\class Homework \hfill --- Homework \homeworknumber --- \hfill  Last update: \today
+  \\ \website \hfill {\color{red} Due: \duedate} }}
+\bigskip
+\newline
+{\bf Instructions and Policy:} Each student should write up their own solutions independently, no copying of any form is allowed.
+You MUST indicate the names of the people you discussed a problem with; ideally you should
+discuss with no more than two other people.\\
+{\color{red} YOU MUST INCLUDE YOUR NAME IN THE HOMEWORK}\\
+You need to submit your answer in PDF. {\LaTeX }  is typesetting is encouraged but not required.  Please write clearly and concisely - clarity and
+brevity will be rewarded. Refer to known facts as necessary. 
+\newline
+
+
+}
+
+\newcounter{questionno}
+\setcounter{questionno}{-1}
+\newcounter{partno}
+
+\newcommand{\question}[1]{
+\noindent
+\newline
+\stepcounter{questionno}
+\setcounter{partno}{0}
+{\bf Q\arabic{questionno} (#1 pts): }
+}
+
+
+%% -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- %%
+
+
+\begin{document}
+
+% Common homework head context.
+%
+\header
+\question{%
+    {\color{red}0pts correct answer, -1,000pts incorrect answer: (0,-1,000)}%
+}
+%
+A correct answer to the following questions is worth 0pts.
+%
+An incorrect answer is worth -1,000pts, which carries over to other homeworks
+and exams, and can result in an F grade in the course.
+%
+\begin{enumerate}[(1)]
+\item Student interaction with other students / individuals:
+\begin{enumerate}[(a)]
+\item I have copied part of my homework from another student or another person (plagiarism).
+\item \textbf{Yes, I discussed the homework with another person but came up with my own answers. Their name(s) is (are): Jason Fotso}
+\item No, I did not discuss the homework with anyone
+\end{enumerate}
+\item On using online resources:
+\begin{enumerate}[(a)]
+\item I have copied one of my answers directly from a website (plagiarism).
+\item \textbf{I have used online resources to help me answer this question, but I came up with my own answers (you are allowed to use online resources as long as the answer is your own). Here is a list of the websites I have used in this homework:\\ \url{https://pytorch.org/docs/main}}
+\item I have not used any online resources except the ones provided in the course website.
+\end{enumerate}
+
+\end{enumerate}
+
+\newpage
+
+\section*{Homework \homeworknumber }
+
+\input{concept}
+
+\newpage
+
+\input{program}
+
+
+
+%############################################################
+\newpage
+\subsection*{Submission Instructions}
+%
+Please read the instructions carefully.
+%
+Failed to follow any part might incur some score deductions.
+
+% Space.
+%
+\hfill
+
+% PDF.
+%
+\subsection*{\bf PDF upload}
+%
+The report PDF must be uploaded on Gradescope.
+
+% Space.
+%
+\hfill
+
+% Code.
+%
+\subsection*{\bf Code upload}
+%
+\noindent \textbf{Naming convention}:
+%
+[firstname]\_[lastname]\_hw\homeworknumber
+\\
+%
+All your submitting code files, a ReadMe, should be included in one folder. Create a folder [firstname]\_[lastname]\_hw\homeworknumber \ and put both the implemented skeleton folders inside it. Then tar it.\\
+%
+The folder should be named with the above naming convention.
+%
+For example, if my first name is ``Bruno'' and my last name is ``Ribeiro'',
+then for Homework \homeworknumber, my file name should be
+``bruno\_ribeiro\_hw\homeworknumber''.
+
+% Space.
+%
+\hfill
+
+% Pack your submission.
+%
+\noindent \textbf{Tar your folder:}
+%
+[firstname]\_[lastname]\_hw\homeworknumber.tar.gz
+\\
+%
+Remove any unnecessary files in your folder, such as training datasets.
+%
+Make sure your folder structured as the tree shown in Overview section.
+%
+Compress your folder with the the command:
+%
+\textbf{
+    tar -czvf bruno\_ribeiro\_hw\homeworknumber.tar.gz bruno\_ribeiro\_hw\homeworknumber
+.}
+
+% Space.
+%
+\hfill
+
+% Submit.
+%
+\noindent \textbf{Submit:}
+%
+{\bf Brightspace}
+\\
+%
+Please submit your compressed file on \textbf{Brightspace}.
+%
+Please make sure you didn't use any library/source explicitly forbidden to use.
+%
+If such library/source code is used, you will get 0 pt for the coding part of
+the assignment.
+%
+If your code doesn't run on scholar.rcac.purdue.edu, then even if it compiles
+in another computer, your code will still be considered not-running and the
+respective part of the assignment will receive 0 pt.
+
+
+\end{document}

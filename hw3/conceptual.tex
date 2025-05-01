@@ -1,0 +1,152 @@
+% Concept questions.
+%
+\question{Concepts (2.0 pts)}
+%
+Please answer the following questions \textbf{concisely}.
+%
+All the answers, along with your name and email, should be clearly typed in
+some editing software, such as \LaTeX{} or MS Word.
+
+% Beginning of concept question enumeration.
+%
+\begin{enumerate}
+
+\item {\bf (0.5 pt)} We have seen $SO(3),SE(3)$ and their generators. What are the generators of $\text{Sim}(3)$, similarity transformations in 3D space?\\
+{\bf Hint:} $\text{Sim}(3)$ has one extra generator not seen in class.
+
+$\text{Sim}(3)$ has 7 generators. The first 6 generators are the same as $SE(3)$
+(3 for rotation and 3 for translation), and the 7th generator is the scaling
+operator. The scaling operator scales the translation part of the transformation
+matrix.
+
+$\text{Sim}(3)$ is in the form of $T = \begin{bmatrix}sR & t\\ 0 & 1\end{bmatrix}$
+, where $s$ is the scaling factor, $R$ is the rotation matrix, and
+$t$ is the translation vector.
+
+\vspace{.3in}
+
+\item {\bf (0.5 pt)} Consider $n$-element input sequences $x_{1}, \cdots,
+x_{n}$.
+%
+Consider the permutation group over these sequence.
+%
+Show (mathematically) that the left 1-eigenspace associated with the Reynolds operator of the
+permutation group is equivalent to mean-pooling times a constant.
+
+The permutation group of an n-element sequence has $n!$ elements. The Reynolds
+operator is a linear operator that averages over all the elements of the
+permutation group.
+
+The Reynolds operator of the permutation group can be defined as $R(x) =
+\frac{1}{n!} \sum_{i \in n!} \pi_{i}(x)$, where $\pi_i$ is the permutation
+function corresponding to permutation $i$.
+
+Since the summation is over the full permutation, each element $x_j$ must appear
+exactly once in each of the project sequence $\pi{i}(x)$, and the appearances of $x_j$ in all positions must be evenly distributed into $n$ positions. 
+
+Therefore, each element $x_j$ will appear exactly $\frac{n!}{n}=(n-1)!$ times in
+each position.
+
+This is true for all original element. Therefore, the result of the summation by
+the Reynolds operator for each position in the output sequence is $\sum_{i \in
+{n!}} (n-1)! x_i$. And the result of the Reynolds operator is $\frac{1}{n!}
+\sum_{i \in {n!}} (n-1)! x_i = \frac{(n-1)!}{n!} \sum_{i \in {n!}} x_i =
+\frac{1}{n} \sum_{i=1}^{n} x_i$, which is the mean pooling function.
+
+The result of the Reynolds operator is the mean pooling function times a
+constant vector $\begin{bmatrix} 1\\ \vdots\\ 1 \end{bmatrix}$.
+
+\vfill
+
+\vspace{2.5in}
+
+\item ({\bf 0.5 pt}) Show that for an asymmetric graph (i.e., a graph that does
+not have two nodes who are isomorphic), there exists positional node embeddings
+with a one-to-one mapping with the (most expressive) structural representation.
+
+Since the graph is asymmetric, there are no two nodes that are isomorphic. This
+means that each node has a unique structural representation. 
+
+We can assign the positional embedding to each node in the graph by using the
+degree of the node as the positional embedding. The degree of a node is the
+number of edges connected to the node. Since the graph is asymmetric, the degree
+of each node is unique. Therefore, we can assign a unique positional representation
+to each node in the graph.
+
+\vspace{1in}
+     
+\item ({\bf 0.5 pt}) Consider $Y\in \{0,1\}$ that conditionally generates $\mathbf{X} = (X_1,...,X_n)$, $n \geq 2$, with $X_i|(Y=\textbf{0}) \sim \text{Exp}(0.46)$, all sampled i.i.d.\ for $i=1,\ldots,n$, and $X_i|(Y=\textbf{1}) \sim \text{Exp}(0.001)$ also sampled i.i.d.. 
+Note that $\mathbf{X}$ is exchangeable (i.e., the sequence $\mathbf{X}$ should be seen as a set).
+The task is to predict $Y$ given $\mathbf{X}$.
+Now for a given sequence $\mathbf{x}=(x_1,\ldots,x_n)$, $x_i \in \mathbb{R}^\star$, we learn a permutation-invariant logistic regression by applying min-pooling to $\mathbf{x}$, i.e., $x_{(1)} = \min(\mathbf{x})$, and then making the predictor $\hat{y} = \mathbf{1}(\sigma(w x_{(1)}-b)>0.5)$, where $w,b\in\mathbb{R}$ are learnable parameters, and $\sigma$ the Sigmoid function.
+
+
+Assume in training we have $n= n^\text{tr}=10$ and as many training examples as needed,
+calculate the following \\
+\begin{enumerate}
+    \item If $w=1,\ b=1$, what is the expected accuracy of the classifier in the training data? (assume in training $P^\text{tr}(Y=0)=P^\text{tr}(Y=1)=0.5$)
+
+    Since we have $X_i \mid (Y = 0) \sim \text{Exp}(0.46)$, and $X_i \mid (Y =
+    1) \sim \text{Exp}(0.001)$, for $n=10$, we have $X_{(1)} \mid (Y = 0) \sim
+    \text{Exp}(10 \cdot 0.46) = \text{Exp}(4.6)$ and $X_{(1)} \mid (Y = 1) \sim
+    \text{Exp}(10 \cdot 0.001) = \text{Exp}(0.01)$.
+
+    The expected accuracy of the classifier in the training data is given by
+    $P(\hat{Y} = Y) = P(\hat{Y} = 0 \mid Y = 0) P(Y = 0) + P(\hat{Y} = 1 \mid Y
+    = 1) P(Y = 1)$.
+
+    We have $P(\hat{Y} = 0 \mid Y = 0) = P(\sigma(w x_{(1)} - b) < 0.5 \mid Y =
+    0) = P(w x_{(1)} - b < 0 \mid Y = 0) = P(x_{(1)} < 1 \mid Y = 0)$, and
+    $P(\hat{Y} = 1 \mid Y = 1) = P(\sigma(w x_{(1)} - b) > 0.5 \mid Y = 1) =
+    P(w x_{(1)} - b > 0 \mid Y = 1) = P(x_{(1)} > 1 \mid Y = 1)$.
+
+    We have $P(X_{(1)} < x) = 1 - e^{-\lambda x}$, where $\lambda$ is the
+    rate parameter of the exponential distribution.
+    
+    For $Y = 0$, we have $P(X_{(1)} < 1) = 1 - e^{-4.6 \times 1} = 0.9899$, 
+    and for $Y = 1$, we have $P(X_{(1)} > 1) = e^{-0.01 \times 1} = 0.99$.
+
+    The expected accuracy is given by:
+    \begin{align*}
+        P(\hat{Y} = Y) &= P(\hat{Y} = 0 \mid Y = 0) P(Y = 0) + P(\hat{Y} = 1 \mid Y = 1) P(Y = 1)\\
+        &= (0.9899)(0.5) + (0.99)(0.5)\\
+        &= 0.9899 \cdot 0.5 + 0.99 \cdot 0.5\\
+        &= (0.9899 + 0.99)/2\\
+        &\approx (1.9799)/2\\
+        &\approx 0.98995.
+    \end{align*}
+
+    \newpage
+    \item If we want to use our model with an out-of-distribution test data where $n=n^\text{te}=5000$, what will be the expected accuracy of the classifier with $w=1,\ b=1$ in this test data? (assume in test $P^\text{te}(Y=0)=0.1$ and $P^\text{te}(Y=1)=0.9$)
+
+    In the test data, we have $X_{(1)} \mid (Y = 0) \sim \text{Exp}(5000 \cdot
+    0.46) = \text{Exp}(2300)$ and $X_{(1)} \mid (Y = 1) \sim \text{Exp}(5000
+    \cdot 0.001) = \text{Exp}(5)$.
+    The expected accuracy of the classifier in the test data is given by
+    $P(\hat{Y} = Y) = P(\hat{Y} = 0 \mid Y = 0) P(Y = 0) + P(\hat{Y} = 1 \mid Y
+    = 1) P(Y = 1)$.
+
+    We have 
+    
+    $P(\hat{Y} = 0 \mid Y = 0) = P(\sigma(w x_{(1)} - b) < 0.5 \mid Y = 0) = P(w
+    x_{(1)} - b < 0 \mid Y = 0) = P(x_{(1)} < 1 \mid Y = 0) = 1 - e^{-2300}
+    \approx 1$, and 
+    
+    $P(\hat{Y} = 1 \mid Y = 1) = P(\sigma(w x_{(1)} - b) > 0.5 \mid Y = 1) =
+    P(w x_{(1)} - b > 0 \mid Y = 1) = P(x_{(1)} > 1 \mid Y = 1) = e^{-5} \approx
+    0.0067$.
+
+    The expected accuracy is given by:
+    \begin{align*}
+        P(\hat{Y} = Y) &= P(\hat{Y} = 0 \mid Y = 0) P(Y = 0) + P(\hat{Y} = 1 \mid Y = 1) P(Y = 1)\\
+        &= (1)(0.1) + (0.0067)(0.9)\\
+        &\approx 0.1 + 0.0067 \cdot 0.9\\
+        &\approx 0.1 + 0.00603\\
+        &\approx 0.10603.
+    \end{align*}
+
+\end{enumerate}
+{\bf Hint 1}: If $X_1\sim \text{Exp}(\lambda)$, then $P(X_1 < x) = 1 - e^{-\lambda x}$.\\
+{\bf Hint 2}: If $X_1,...,X_n\sim \text{Exp}(\lambda)$ i.i.d, then the first order statistic $X_{(1)}\sim \text{Exp}(n\lambda)$.\\
+{\bf Hint 3}: To calculate the expected accuracy of our classifier from data sampled according to $P(\mathbf{X},Y)$, we need to calculate $ P(\hat{Y} = Y) = \mathbb{E}_{(X_1,...,X_n),Y\sim P(\mathbf{X},Y)} [ \mathbf{1}(\hat{y} = y)]$. Note that train and test have different distributions $P(\mathbf{X},Y)$ (longer sequences $\mathbf{X}$ in test than training).
+\end{enumerate}

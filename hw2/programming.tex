@@ -1,0 +1,43 @@
+\section*{Programming Part {\bf (8 pts)}}
+
+In this part, you are going to perform multiple tasks: (1) HMC sampler for MLP parameters, and (2) CNN and G-Invariant CNN.
+The rule of thumbs is that you can do any changes, but files which are not
+marked (by red color in \ref{subsubsec:overview}, e.g.,
+``main.py'') will be overwritten by TA in the test stage.
+
+\hfill
+
+We provide a brief command summary for GPU environment setup on RCAC Scholar cluster.
+Pay attention that you should use {\bf Python 3.10, CUDA 12.1, PyTorch 2.5.1} for best support.
+\begin{lstlisting}[language=bash, breaklines=true]
+module load cuda/12.1.0 conda/2024.09-py312
+conda create -n DPLClass python=3.10 ipython ipykernel
+conda activate DPLClass
+conda install pytorch==2.5.1 torchvision==0.20.1 pytorch-cuda=12.1 -c pytorch -c nvidia
+conda install scikit-learn seaborn more-itertools
+\end{lstlisting}
+
+Note that every time you login to the scholar cluster, you should run the 1st and 3rd commands again. 
+
+\textbf{A GPU is essential for some of the tasks, thus make sure you follow the instruction to set up the GPU environment on ``scholar.rcac.purdue.edu''.} A tutorial is available at\\
+{\scriptsize \url{https://www.cs.purdue.edu/homes/ribeirob/courses/Spring2025/howto/cluster-how-to.html}}.
+
+In particular, you should learn how to navigate the \textbf{Slurm} system to request back-end computing nodes equipped with GPUs on the \texttt{gpu} Slurm queue. Ensure you understand how to use the \texttt{slist, squeue, sinteractive, sbatch, scancel} commands. 
+
+\textbf{This time for your convenience, we provide a Slurm batch submission script called \texttt{scholar.sh} in the skeleton code.} You can use it to submit \emph{any} command lines to a GPU computing nodes. For instance, suppose the original command to run a python training script is \texttt{python main.py data}, then if run the following:
+\begin{lstlisting}[language=bash, breaklines=true]
+sbatch scholar.sh python main.py data
+\end{lstlisting}
+Then the same job will be submitted to a GPU backend node. 
+
+
+\subsection*{HW Overview}
+\label{subsubsec:overview}
+There are two tasks in this homework. The first task, namely Hamiltonian Monte Carlo, will use the codebase named ``\texttt{hw2\_hmcmlp\_skeleton}''. The second task, namely CNN and G-Invariant CNN, will use the codebase named ``\texttt{hw2\_imageclassifier\_skeleton}''.
+
+\newpage
+\input{hmcmnist}
+
+\newpage
+\input{cnn}
+

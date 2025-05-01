@@ -1,0 +1,144 @@
+\section{Q1: Conceptual Part {\bf (2 pts + (bonus) 1 pt)}}
+
+Please answer the following questions \textbf{concisely}. All the answers, along with your name and email, should be clearly typed in some editing software, such as Latex or MS Word.
+
+\begin{enumerate}
+
+
+\item {\bf (0.4 pt)} Prove mathematically why CNNs are sensitive to image rotations. \\
+{\bf Hint:} Think about how the combination of kernels over small image patches induces sensitivity.
+
+Because for each kernel 
+
+$$O(i, j) = \sum_m \sum_n I(i+m, j+n) \cdot K(m, n)$$,
+
+where $I$ is the input image, $K$ is the kernel, and $O$ is the output image,
+the convolutional layer is sensitive to the order of the input image, namely,
+$K(m, n) \neq K(m', n')$, where $m'$ and $n'$ are the rotated coordinates of $m$
+and $n$. Therefore, the convolutional layer is sensitive to the order of the
+input image, and the output of the convolutional layer changes when the input
+image is rotated.
+
+Additionally, the vectorization of the image patches is also order-sensitive,
+which makes the network sensitive to the rotation of the input image. In order
+to make the model invariant to rotation, one has to use techniques such as data
+augmentation or G-invariant CNNs.
+
+\vspace{3.5in}
+
+\item {\bf (0.4 pt)} Early stopping uses the validation data to decide which parameters we should keep during our SGD optimization. Explain why models obtained by early stopping tend to generalize better than models obtained by running a fixed number of epochs.
+Also explain why early stopping should never use the training data.
+
+Early stopping tracks the performance of the model on the validation set, which
+is independent from the training set, and is a reliable metric to measure the
+generalization performance of the model. When the model starts to overfit the
+training data, the performance on the validation set will start to decrease.  By
+stopping the training when the model starts to overfit the training data, we can
+prevent the model from memorizing the training data and improve the
+generalization performance. 
+
+If we use the training data to decide when to stop, it will not help the model
+detect overfitting, because the model will always perform better on the training
+data as it is trained on it. Therefore, the model will overfit the training data
+and generalize poorly to unseen data.
+
+\vspace{3.5in}
+
+
+\item {\bf (0.4 pt)} Propose a Metropolis-Hastings algorithm designed to eliminate watermarks and blur from images. Specifically, assume that we have access to the weights of a pre-trained neural network $f: [0, 1]^{d \times d \times 3} \to [0, 1]^{d \times d \times 3}$ that was trained using the L2 loss to intelligently introduce watermarks or blurs to input raw images (assume all images have 3 channels (RGB) and channel values normalized to range $[0, 1]$). Now, given a single watermarked or blurred image $\mathbf{Y} \in [0, 1]^{d \times d \times 3}$, give the pseudocode for a Metropolis-Hastings algorithm that generates $N$ images $\{\mathbf{X}_i\}_{i=1}^N$ using $f$ that are versions of $\mathbf{Y}$ with the watermarks removed and unblurred. \\
+{\bf Hint:} Since the model $f$ used L2 loss to train, what is its probabilistic assumption (e.g. what is the noise distribution)? How do you express the data likelihood $P(\mathbf{Y} \mid \mathbf{X}; f)$ under this probabilistic assumption? \\
+{\bf Hint:} How to initialize $\mathbf{X}$? Starting from a random tensor uniformly sampled from $[0, 1]^{d \times d \times 3}$ would be very inefficient because it would take the algorithm a long time to reach the ``good'' region. What is a better way to initialize?
+
+Start from a random image $\mathbf{X}$, initialized to be $\mathbf{Y}$, and for
+each iteration, propose a new image $\mathbf{X}'$ by adding a small amount of
+noise to $\mathbf{X}$. Calculate the acceptance probability $A(\mathbf{X},
+\mathbf{X}')$ using the Metropolis-Hastings acceptance probability formula: $A =
+\min\left(1, \frac{P(\mathbf{X}')}{P(\mathbf{X})}\right)$. Here, $P(\mathbf{X})$
+is the likelihood of the noisy image $\mathbf{Y}$, under the assumption that
+$\mathbf{X}$ is the clean image. Since the model $f$ was trained using L2 loss,
+the noise distribution is Gaussian. Therefore, $P(\mathbf{Y}|\mathbf{X}; f)$ is
+the Gaussian likelihood of the noisy image $\mathbf{Y}$ given the clean image
+$\mathbf{X}$.
+
+Generate a random number between 0 and 1, and if it is less than $A$, accept
+$\mathbf{X}'$ as the new image. Repeat this process for $N$ iterations to obtain
+$N$ images $\{\mathbf{X}_i\}_{i=1}^N$.
+
+\vspace{3.5in}
+
+
+\item {\bf (0.8 pt + (bonus) 1 pt)} Consider a one hidden-layer Multi Layer Perceptron with ReLU as activation without biases (for simplicity). The output $\hat{y}\in \mathbb{R}$ of this network for an input $x \in \mathbb{R}^d$ can be defined as $\hat{y} = f(x)$, where $f(x; W_1,W_2) := ReLU(W_2^T  ReLU( W_1^T x))$, where $W_1\in \mathbb{R}^{d\times d_1},W_2\in \mathbb{R}^{d_1\times 1}$ are arbitrary weight matrices we will learn from data.
+\begin{enumerate}
+    \item Prove that $\forall x \in \mathbb{R}^d$ and $\forall \alpha \in \mathbb{R}^+$ (positive real numbers), we have $f(x; W_1,W_2) = f(x; \alpha W_1,W_2/\alpha)$.
+
+    Because the ReLU function can be splitted into two segments $ReLU(x) = x$ if
+    $x > 0$ and $ReLU(x) = 0$ if $x \leq 0$, we prove separately that for the two segments,
+    multiplication by a positive constant can distribute into/out of the ReLU function.
+    
+    Namely, for $x > 0$, $ReLU(\alpha x) = \alpha x = \alpha ReLU(x)$, and for
+    $x \leq 0$, $ReLU(\alpha x) = 0 = \alpha ReLU(x)$. Therefore, $ReLU(\alpha
+    x) = \alpha ReLU(x)$ for all $x \in \mathbb{R}$ and $\alpha \in
+    \mathbb{R}^+$.
+
+    Therefore, we have $f(x; W_1, W_2) = ReLU(W_2^T ReLU(W_1^T x)) = ReLU(W_2^T
+    \alpha / \alpha ReLU(W_1^T x)) = ReLU(W_2^T\alpha ReLU(\alpha W_1^T x) =
+    f(x; \alpha W_1,W_2/\alpha)$
+
+    \vspace{1.5in}
+
+    \item  
+  Consider the same setting as above. Let the negative log-likelihood be $L(W_1, W_2, x, y) = (f(x; \\W_1,W_2) - y)^2$ (hence, we are assuming a model with additive standard Gaussian noise as error). Assume $(W^*_1,W^*_2)$ is a critical point for the negative log-likelihood, i.e., $\frac{\partial L}{\partial W_1}|_{(W_1,W_2) = (W^*_1,W^*_2)}=0$ and $\frac{\partial L}{\partial W_2}|_{(W_1,W_2) = (W^*_1,W^*_2)}=0$, where $W^{\alpha,*}_1=\alpha W^*_1$, $W^{\alpha,*}_2=W^*_2/\alpha$. Prove that $\forall \alpha \in \mathbb{R}^+$, $(W^{\alpha,*}_1, W^{\alpha,*}_2)$ is also a critical point. \\
+  \textbf{Warning}: The derivative of a ReLU function at point $0$ is undefined. For simplicity, you do not need to consider this edge case.
+
+  Since from the previous setting, we have $f(x; W_1, W_2) = f(x; \alpha W_1,
+  W_2/\alpha)$, we have $L(W_1, W_2, x, y) = L(\alpha W_1, W_2/\alpha, x, y)$,
+  for the given loss function. Therefore, the critical points of the loss
+  function are the same for the two settings. Since $(W^*_1, W^*_2)$ is a
+  critical point, for all $x$ such that $ReLU(W_1^T x) \neq 0$ and $ReLU(W_2^T
+  ReLU(W_1^T x)) \neq 0$, we have 
+  
+  $$\frac{\partial L}{\partial W_1}|_{(W_1,W_2) = (W^*_1,W^*_2)} =
+  \frac{\partial L}{\partial W_1}|_{(W_1,W_2) = (W^{\alpha,*}_1,W^{\alpha,*}_2)}
+  = 0$$ and $$\frac{\partial L}{\partial W_2}|_{(W_1,W_2) = (W^*_1,W^*_2)} =
+  \frac{\partial L}{\partial W_2}|_{(W_1,W_2) = (W^{\alpha,*}_1,W^{\alpha,*}_2)}
+  = 0$$. Therefore, $(W^{\alpha,*}_1, W^{\alpha,*}_2)$ is also a critical point.
+  
+    \newpage
+    
+    \item {\bf (bonus 0.5 pt)}
+    Using the same setting as (b), assume $(W_1^*,W_2^*)$ is a local minima of the negative log-likelihood. We can show $(W_1^{\alpha,*},W_2^{\alpha,*})$ is also a local minimum point (no need to prove this property), where $W^{\alpha,*}_1=\alpha W^*_1$, $W^{\alpha,*}_2=W^*_2/\alpha$. We define a sharp function using the Hessian's Frobenius norm $$\text{sharp}(W_1,W_2) := \left\Vert \begin{bmatrix} \nabla^2_{W_1}(L(W_1,W_2,x,y))  & \mathbf{0}\\
+    \mathbf{0} & \nabla^2_{W_2}(L(W_1,W_2,x,y))
+    \end{bmatrix}\right\Vert_F,$$ which can be used as a proxy measure of the sharpness of the likelihood landscape near the local minimum of the negative log-likelihood (since the Hessian $\nabla^2_{W_h}(L(W_1,W_2,x,y))$, $h \in \{1,2\}$, at a local minimum is usually positive definite, it measures the local curvature).
+
+    Function $f(x;W_1,W_2)$ is said to have a sharper loss at a local minimum $(W_1^*,W_2^*)$ than another local minimum $(W_1^{**},W_2^{**})$ if 
+    $$\text{sharp}(W^*_1,W^*_2) > \text{sharp}(W^{**}_1,W^{**}_2).$$
+    Show that, for an arbitrary local minima $(W_1,W_2)$, there is an arbitrary constant $\alpha > 0$ such that the sharpness of the loss function increases, i.e., $$\text{sharp}(W^{\alpha,*}_1,W^{\alpha,*}_2) > \text{sharp}(W^{*}_1,W^{*}_2).$$
+
+    
+    \textbf{Hint 1:} Calculate the relationship between $\nabla^2_{W_1}(L(W_1,W_2,x,y))|_{(W_1,W_2) = (W^{\alpha,*}_1,W^{\alpha,*}_2)}$ and\\ $\nabla^2_{W_1}(L(W_1,W_2,x,y))|_{(W_1,W_2) = (W^{*}_1,W^{*}_2)}$ (also for $\nabla^2_{W_2}$). Both of them are (assumed to be) positive definite, which means positive eigenvalues. To calculate the sharpness, we can then use the property that trace of a matrix is equal to the sum of its eigenvalues to determine if there exists positive elements in the diagonal. From the definition of the Frobenius norm, we can easily see the norm is bounded below by the sum of any subset of positive element in the matrix. Finally, we can show how the sharpness can be increased by adjusting the positive element (with $\alpha$) in the matrix to increase the Frobenius norm. \\
+    \textbf{Hint 2}
+    {Frobenius norm of a $m \times n$ matrix $\mathbf{A}$ is defined as, 
+        \begin{displaymath}
+           \lvert\lvert\mathbf{A}\rvert\rvert_{F} = \sqrt{\sum_{i=1}^{m}\sum_{j=1}^{n}\lvert a_{ij}\rvert^2} .
+        \end{displaymath}
+        }
+
+    \vspace{3in}
+    
+
+    \newpage
+    \item {\bf (bonus 0.5 pt)} This question will explain why covariance matrix of Metropolis-Hasting proposals are very important. Given the training data $\{\mathbf{x}_i, \mathbf{y}_i\}_{i=1}^{n}$ for a supervised learning model task $p(W_1, W_2| \{\mathbf{x}_i, \mathbf{y}_i\}_{i=1}^{n})$, where $W_1, W_2$ are the paremeters of the model $f(x;W_1,W_2)$ stated at the beginning of this question,  we would like to apply the following Bayesian averaging procedure $$p_{Bayesian}(\mathbf{y}|\mathbf{x}; \{\mathbf{x}_i, \mathbf{y}_i\}_{i=1}^{n}) = \frac{1}{K}\sum_{i=1}^{k}p(\mathbf{y}|\mathbf{x};(W^{(k)}_1,W^{(k)}_2))$$ using a Metropolis-Hastings (MH) procedure to obtain $K$ independent samples of the posterior as follows
+    $$(W^{(k)}_1, W^{(k)}_2) \sim P(W_1, W_2 | \{\mathbf{x}_i, \mathbf{y}_i\}_{i=1}^{n} ), \qquad k \in{1, 2, \ldots, K}.$$ 
+    
+    Assume we have calculated the rejection rate $\gamma = \frac{\text{Number of times the samples were rejected}}{\text{Number of sampled MH proposals}}$. Now assume the Metropolis-Hastings procedure has a sampling proposal with covariance matrix $\mathbf{I}$, i.e., $q(W_{1,t+1}|W_{1,t}) \sim \text{Normal}(W_{1,t},\mathbf{I} )$. Consider $W_1, W_2$ as vectors, assume we know $(W_1^*, W_2^*)$ is a local minimum point as in 4(b), we further assume the initial state for the $k$-th MH sampling procedure is defined as $(W^{(k)}_{1,0}, W^{(k)}_{2,0}) = (W_1^{\alpha^{(k)},*}, W_2^{\alpha^{(k)},*})$, $\alpha^{(1)},...,\alpha^{(K)}\in \mathbb{R}^+$. Now assume $\alpha^{(1)}=1$, you observe there exists $k\in {1,...,K}$, such that the $k$-th Metropolis-Hastings procedure has much higher rejection rate than the $1$-st Metropolis-Hastings procedure. Can you give one possible explanation for this phenomenon?
+    \\
+    {\bf Hint 1:} Use the insights from Q4(b) about the sharpness of the likelihood at different local minimum points.\\
+    {\bf Hint 2:} A 2D drawing of the phenomenon might help you explain it.\\
+    
+    
+     
+\end{enumerate}
+
+
+\end{enumerate}
+

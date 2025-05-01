@@ -1,0 +1,275 @@
+\documentclass[25pt, a0paper, portrait]{tikzposter}
+\usepackage[
+    backend=biber,   % Use biber to compile
+    style=numeric,   % Or 'authoryear', etc.
+]{biblatex}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{pifont}  % for cross
+\usepackage{xcolor}  % for color
+
+
+\definecolorstyle{purdueColorStyle}{
+    \definecolor{purduegold}{HTML}{B19447}
+    \definecolor{purdueblack}{HTML}{000000}
+}{
+    \colorlet{backgroundcolor}{white}
+    \colorlet{titlebgcolor}{white}
+    \colorlet{titlefgcolor}{purdueblack}
+    \colorlet{blocktitlebgcolor}{purduegold}
+    \colorlet{blocktitlefgcolor}{purdueblack}
+    \colorlet{blockbodybgcolor}{white}
+    \colorlet{blockbodyfgcolor}{black}
+    \colorlet{innerblocktitlebgcolor}{purduegold}
+    \colorlet{innerblocktitlefgcolor}{purdueblack}
+    \colorlet{innerblockbodybgcolor}{white}
+    \colorlet{innerblockbodyfgcolor}{black}
+}
+
+\newcommand{\cmark}{\textcolor{green!70!black}{\ding{51}}} % green checkmark
+\newcommand{\xmark}{\textcolor{red!70!black}{\ding{55}}}   % red cross
+
+\addbibresource{poster.bib}
+% \bibliographystyle{plainnat}
+
+\title{\parbox{\linewidth}{%
+            \centering
+            \textbf{Compositional Neural Reasoning} \\
+            \textit{via Pretrained Perception and Program Control}
+}}
+\author{Haotian Deng \hspace{1em} Purdue ID: deng254}
+\institute{Purdue University}
+\titlegraphic{\mbox{\includegraphics[width=0.7\linewidth]{CompSci_V-Full-CMYK.jpg}}}
+
+
+\settitle{
+\centering
+\vbox{
+\hbox{
+    % Left side (Title, Author, Institute)
+    \begin{minipage}[h]{0.65\linewidth}
+        \color{titlefgcolor}
+        {
+        \centering
+        \bfseries \Huge \sc \@title \par}
+        \vspace{1em}
+        
+        {
+        \centering
+        \huge \@author \par}
+        \vspace{1em}
+        
+        {
+        \centering
+        \LARGE \@institute \par}
+    \end{minipage}%
+    \hfill
+    % Right side (Logo)
+    \begin{minipage}[h]{0.3\linewidth}
+        \raggedleft % Align right
+        \@titlegraphic
+    \end{minipage}
+    \vspace{-5em} % Adjust vertical space
+}
+}
+}
+
+% \definetitlestyle{ShortPurdueTitle}{
+%     width=\textwidth,
+% }{
+%     \node[anchor=north, inner sep=0.8cm, line width=2pt, fill=titlebgcolor, rounded corners] 
+%     at (\titleposleft+\titleposright/2, \titlepostop) {%
+%         \begin{minipage}[c]{0.75\titlewidth}
+%             \centering
+%             {\Huge \textbf{Compositional Neural Reasoning}} \\[-0.4em]
+%             {\large \textit{via Pretrained Perception and Program Control}} \\[0.4em]
+%             {\normalsize \textbf{David Deng}} \\[-0.4em]
+%             {\normalsize Purdue ID: deng254} \\[0.4em]
+%             {\Large \TP@maketitle@name} \\[-0.4em]
+%             {\normalsize \TP@maketitle@institute}
+%         \end{minipage}%
+%         \hfill
+%         \begin{minipage}[c]{0.20\titlewidth}
+%             \centering
+%             \includegraphics[height=2cm]{CompSci_H-Full-CMYK.jpg}
+%         \end{minipage}
+%     };
+% }
+
+% \usetheme{Simple}
+% \usetheme{Rays}
+% \usetheme{Board}
+\usetheme{Default}
+\usecolorstyle{purdueColorStyle}
+% \usecolorstyle{Britain}
+% \usecolorstyle{Sweden}
+% \usecolorstyle{Australia}
+% \usetitlestyle{Envelope}
+\usetitlestyle{Filled}
+% \usetitlestyle{VerticalShading}
+
+\begin{document}
+\maketitle
+
+% Introduction
+\block{Introduction}{
+    
+   This project investigates the role of partially initializing weights with
+   pretrained perception modules in enabling compositional reasoning in neural
+   networks. We learn a function \textbf{$p(\text{y} \mid \text{x}, \text{tag})$}, where
+   \textbf{x} is a $2\times 2$ grid of digits and $\textbf{tag}$ specifies the
+   operation (e.g., row sum). By separating perception (digit recognition) from
+   symbolic control (program heads), we enable compositional reasoning in grid
+   tasks.
+
+}
+
+\begin{columns}
+\column{0.5}
+
+\block{Motivation}{
+   Many complex problems can be naturally \textbf{decomposed} into compositions
+   of \textbf{simpler subprograms}, often with known or interpretable
+   structures. By separately pretraining and initializing well-understood
+   components, such as perceptual modules for digit recognition, we investigate
+   how such decomposition affects training stability, convergence speed, and
+   test accuracy. This approach leverages \textbf{existing knowledge} through
+   pretrained modules, which can be \textbf{beneficial} for \textbf{complex
+   tasks} requiring both perception and reasoning.
+}
+
+\block{Problem Statement}{
+    \textbf{Task:} Learn a function that, given a grid of digits and a tag specifying a selection rule, computes the sum of the selected digits. \\
+    \textbf{Input:} A digit grid (e.g., $2 \times 2$) and a tag indicating which subset of digits to sum.  \\
+    \textbf{Output:} A single scalar: the sum of the selected digits.
+}
+% Dataset
+\block{Dataset}{
+    \textbf{Input 1: MNIST Digits} arranged in $2 \times 2$ grids. \\
+    \textbf{Input 2: Tag} indicates which cells are to be summed (See Figure 2). \\
+    \begin{minipage}[h]{0.45\linewidth}
+        \centering
+        \includegraphics[scale=0.8,width=\linewidth]{problem_statement.png}
+
+        Figure 1: Illustration of the problem setup, showing the input $2 \times
+        2$ grid of digits and the corresponding output by summing along each
+        row/column.
+
+    \end{minipage}
+    \hspace{0.02\linewidth} % small horizontal space between images
+    \begin{minipage}[h]{0.45\linewidth}
+        \centering
+        \scalebox{2}{
+            \input{program_id}
+        }
+        Figure 2: Tag indicates which cells to sum. The tag is
+        passed to the program head, which helps the model select the appropriate
+        cells for summation.
+    \end{minipage}
+}
+
+
+% Proposed Approach
+\block{Proposed Approach}{
+    \textbf{Model Overview} The model predicts the \textbf{sum} of selected digits in a $2 \times 2$ grid based on the tag.
+
+    \begin{minipage}[h]{0.45\linewidth}
+        \centering
+        \scalebox{.85}{
+            \input{architecture}
+        }
+        \\
+        Figure 3: Architecture Illustration. 
+    \end{minipage}%
+    \begin{minipage}[h]{0.51\linewidth}
+        \centering
+        \begin{itemize}
+            \item \textbf{Perception:} Processes each $28 \times 28$ cell independently, outputs digit probabilities ($0$--$9$).
+            \item \textbf{Program Head:} Predicts soft attention over grid cells.
+            \item \textbf{Symbolic Reasoning:} Normalize outer product to ensure \textbf{permutation invariance}.
+            \item \textbf{Sum Prediction:} Symmetrize masked attention to combine probabilities over sums ($0$--$18$).
+        \end{itemize}
+    \end{minipage}%
+
+    % \textbf{Training Objective:} Minimize the negative log-likelihood of the true sum label.
+
+    \vspace{0.5cm}
+
+    \begin{minipage}[h]{0.43\linewidth}
+
+        \textbf{Summary of Variants:} Figure 4 summarizes the \textbf{different
+        variants} used in the experiment. Each variant is defined by whether the
+        digit recognizer and program head are pretrained and/or frozen. ``P-D''
+        and ``F-D'' refer to pretraining and freezing the digit recognizer;
+        ``P-H'' and ``F-H'' refer to pretraining and freezing the program head.
+
+    \end{minipage}%
+    \begin{minipage}[h]{0.51\linewidth}
+        \centering
+        \begin{tabular}{lcccc}
+        \toprule
+        \textbf{Variant} & \textbf{D-Pre} & \textbf{D-Frz} & \textbf{H-Pre} & \textbf{H-Frz} \\
+        \midrule
+        Baseline    & \xmark & \xmark & \xmark & \xmark \\
+        P-D         & \cmark & \xmark & \xmark & \xmark \\
+        F-D         & \cmark & \cmark & \xmark & \xmark \\
+        P-H         & \xmark & \xmark & \cmark & \xmark \\
+        F-H         & \xmark & \xmark & \cmark & \cmark \\
+        P-D + P-H   & \cmark & \xmark & \cmark & \xmark \\
+        P-D + F-H   & \cmark & \xmark & \cmark & \cmark \\
+        \bottomrule
+        \end{tabular}
+        Figure 4: Summary of training variants and initialization settings.
+    \end{minipage}%
+    }
+
+\column{0.5}
+
+\block{Results}{
+    \includegraphics[scale=0.8,width=\linewidth]{acc_vs_variants.png}
+    \includegraphics[scale=0.8,width=\linewidth]{training_time.png}
+    % \begin{itemize}
+    %     \item The baseline model (without any pretraining) attains a strong 97.8\% accuracy at a learning rate of 0.005, outperforming several pretrained variants.
+    %     \item Using a moderately higher learning rate enables the pretrained readhead variant to surpass 80\% accuracy, ultimately achieving 91\% final accuracy.
+    % \end{itemize}
+}
+
+% Conclusion
+\block{Conclusion and Next Steps}{
+    \begin{itemize}
+        \item Pretraining \textbf{does not} improve the \textbf{maximum achievable final accuracy} compared to a carefully trained baseline.
+        \item Pretraining \textbf{accelerates convergence} and \textbf{improves training stability}.
+        \item \textbf{Freezing a large fraction} of model parameters even after pretraining can severely \textbf{restrict task-specific adaptation} and lead to catastrophic training failure.
+        \item \textit{Next}: Explore the benefit of pre-training with other problems where end-to-end training is more challenging (\emph{e.g.}\ Arithmetics with hand-written operators).
+        \item \textit{Next}: Use \textbf{weight-variance-based metrics} to monitor the internal structure of neural networks, with the goal of improving both interpretability and debugging capabilities.
+    \end{itemize}
+}
+
+% Related Work
+\block{Related Work}{
+    This work builds on \textit{Neural TerpreT}
+    \cite{gaunt_differentiable_2017,gaunt_terpret_2016}, where perception
+    modules are composed with differentiable interpreters. We contrast with
+    monolithic LSTM baselines by explicitly separating visual and symbolic
+    reasoning.
+
+    Symbol correctness of a sub-network is crucial for transfer learning and interpretability
+    \cite{bembenek_symbol_2024}; this project similarly evaluates intermediate
+    predictions alongside task performance.
+
+    The Neural Programmer-Interpreter (NPI) \cite{reed_neural_2016} learns
+    programs compositionally by calling subprograms from memory, enabling strong
+    generalization from few examples. Our project similarly leverages modular
+    structures to support transfer and efficient learning.
+
+    \printbibliography[heading=none]
+}
+
+
+\end{columns}
+
+\end{document}

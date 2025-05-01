@@ -1,0 +1,155 @@
+\subsection*{Q1: Conceptual Questions (4.5 pts)}
+
+\begin{enumerate}
+
+
+
+\item ({\bf 1.0 pts}) Detail how we can replace the equivariant representation of the self-attention part of the Transformer architecture with an {\em equivariant representation} using a MLP architecture with input and output dimensions $n\times d$, where $n$ is the number of elements in the sequence, and $d$ is the hidden dimension. Since the MLP can only take a fixed size input, for simplicity, we consider every input sequence to have exactly $n$ tokens.
+Specifically, replace the representation of the $i$-th word of the $m$-th self-attention head,  $z^{(m)}_i$, of our Transformer lecture with a corresponding MLP output.\\
+{\bf Hint:}  Make sure the representation coming out of the MLP, $h_1,\ldots,h_n$ for a $n$-th word sentence, is equivariant. The key is to use those set representation techniques we learned in lecture. In particular, your MLP architecture is allowed to shared weights for tokens at different locations achieve equivariance.
+% Students can write or type their answer here.
+
+\begin{answerbox}[3.5in]
+To construct an MLP-based architecture that replaces the self-attention
+representation $z^{(m)}_i$ while maintaining permutation equivariance, we
+proceed as follows.
+
+Let the input be a sequence of $n$ tokens, $x_1, \ldots, x_n \in \mathbb{R}^d$,
+and let $X \in \mathbb{R}^{n \times d}$ denote the full input.
+
+Apply a shared MLP $\psi: \mathbb{R}^{2d} \to \mathbb{R}^d$ to each token. To incorporate context, we concatenate each token $x_i$ with a global summary vector $g \in \mathbb{R}^d$:
+\[
+g = \sum_{j=1}^n x_j
+\quad \text{and} \quad
+h_i = \psi([x_i; g]) \quad \text{for } i = 1, \ldots, n
+\]
+where $[x_i; g]$ denotes the concatenation of the two vectors.
+
+The same function $\psi$ is applied at every position $i$, ensuring that the
+output $h_1, \ldots, h_n$ is equivariant to permutations of the input sequence.
+
+Equivariance is achieved by weight sharing and permutation-invariant aggregation
+(via summation). Concatenating the global summary vector with each token allows
+the MLP to approximate interaction between tokens (since there is no
+finer-grained pair-wise attention mechanism).
+\end{answerbox}
+
+\item ({\bf 1.0 pt}) Consider a decoder-only transformer model designed for a text generation task. Suppose we want to replace the traditional Rotary Position Embeddings (RoPE) with a novel variant that incorporates an additional learnable parameter, which scales the rotational frequency.
+
+Specifically, let's denote the embedding dimension as $d$, the sequence length as $n$, and the position in the sequence as $pos$. The standard RoPE can be represented as:
+$$
+\begin{aligned}
+\text{ROPE}_{2i}(pos) &= \sin(\frac{pos}{10000^{2i/d}}) \\
+\text{ROPE}_{2i+1}(pos) &= \cos(\frac{pos}{10000^{2i/d}})
+\end{aligned}
+$$
+
+In our proposed variant, we introduce learnable parameters $\alpha_{i}$ that scales the rotational frequency as:
+$$
+\begin{aligned}
+\text{ROPE}^\alpha_{2i}(pos) &= \sin(\alpha_{i} \cdot \text{pos}) \\
+\text{ROPE}^\alpha_{2i+1}(pos) &= \cos(\alpha_{i} \cdot \text{pos})
+\end{aligned}
+$$
+
+{\bf Assuming the learnable parameters $\alpha_{i}$ are optimized during training, answer the following question:} Provide a mathematical formulation of how the proposed RoPE variant affects the relative positions of tokens in the self-attention mechanism. Specifically, for which values of $(\alpha_0,\ldots)$ would the model almost lose the ability to encode some relative positional embeddings and what would be these positions?
+
+\textbf{Hint:} In what ways might this modification negatively impact the model's performance on tasks that require accurately distinguishing between long-range and short-range dependencies? 
+
+{\bf Support your arguments with the appropriate mathematical equations.}
+~
+\begin{answerbox}[3in]
+There are two regimes in which the proposed RoPE variant may fail to encode relative position information:
+
+\begin{itemize}
+    \item \textbf{Small $\alpha_i$ (underfitting):} When $\alpha_i \ll \frac{1}{n}$, the rotation angle $\alpha_i \cdot (pos_1 - pos_2) \approx 0$ for all $pos_1, pos_2$, making the sinusoidal outputs nearly constant across all positions. This effectively collapses positional variation and prevents the model from distinguishing between any positions.
+
+    \item \textbf{Large $\alpha_i$ (aliasing):} When $\alpha_i \cdot (pos_1 - pos_2) = 2\pi k$ for some integer $k$, distant positions become indistinguishable because the sine and cosine functions are periodic. This aliasing effect leads to incorrect modeling of long-range dependencies, as different positions are rotated to the same angle.
+
+\end{itemize}
+
+In both cases, the model loses the ability to encode accurate relative position information in the attention mechanism, degrading performance on tasks involving structured or long-range dependencies.
+\end{answerbox}
+~
+\newpage
+
+\item ({\bf 2.5 pt}) We want use to Low-Rank Adaptation (LoRA) fine-tune a large decoder-only transformer (Causal masking) to answer questions about a long document that is given at the beginning of the input sequence. Note that the input sequence consists of a long document followed by a prompt, requiring the model to attend back to the document when generating answers. The fine tuning can be described as operating on the training data $D = \{(x_i,y_i)\}_i$, where the $i$-th fine-tuning example, $x_i$ is the document + prompt sequence and $y_i$ is the answer sequence.
+
+Each self-attention module contains original weight matrices $W_q$, $W_k$, and $W_v \in \mathbb{R}^{d_{model} \times d_{model}}$. LoRA decomposes each matrix into a fixed pre-trained component $W_0$ plus a low-rank update $W_{\text{LoRA}} = BA$, where $B \in \mathbb{R}^{d_{model} \times r}$ and $A \in \mathbb{R}^{r \times d_{model}}$ with $r \ll d_{model}$.
+
+\subsection*{Questions}
+
+\begin{enumerate}
+    \item (1.0 pt) \textbf{Attention Pattern Analysis}:  
+    Consider applying LoRA only to the last transformer block on either the query matrix ($W_q$) or key matrix ($W_k$). Explain which option would require significantly less computation to fine-tune. Support your reasoning with theoretical arguments about how query-key impacts the prediction of $y_i[0]$, the first token of $y_i$.\\
+    {\bf Hint 1:} Consider what you can cache of the computation and perform only once.\\
+    {\bf Hint 2:} The prediction of $y_i[0]$ depends only on the embedding of the last token of $x_i$.
+~
+\begin{answerbox}[2.5in]
+    
+Applying LoRA to the \textbf{query matrix} $W_q$ requires significantly less
+computation than applying it to the key matrix $W_k$.
+
+To predict the first output token $y_i[0]$, the model uses: a single query
+vector, derived from the final token of $x_i$, but \textbf{all key vectors},
+derived from the entire input $x_i$ (document + prompt), which can be long
+
+If LoRA is applied to $W_q$, only one low-rank update needs to be computed per
+example, since there is only one query. However, if LoRA is applied to $W_k$,
+all key vectors (one per input token) must be recomputed with the new LoRA
+parameters.
+
+Moreover, keys from the input can be cached across examples if $W_k$ is fixed.
+But when LoRA is applied to $W_k$, this caching is no longer valid, increasing
+compute further.
+
+Thus, applying LoRA to $W_q$ is computationally cheaper and more efficient
+during fine-tuning under causal masking.
+\end{answerbox}
+
+~
+
+\item (0.5 pts) \textbf{Value Matrix Adaptation}:  
+
+Discuss now applying LoRA solely to the value matrix ($W_v$) of the last
+transformer block. Highlight qualitative difference between fine tuning $W_v$
+from fine tuning $W_q$. Propose an empirical experiment that could validate your
+claims: define a task that would help you decide which procedure is best to find
+information inside a long document.\\ {\bf Hint:} Assume that the model's
+challenge lies in locating information to answer the query.
+
+\begin{answerbox}[3in]
+LoRA applied to $W_q$ improves how the model formulates queries, i.e., how it searches for relevant content in the input sequence. In contrast, LoRA applied to $W_v$ modifies what content is extracted once relevant positions have been identified via attention.
+
+Thus, fine-tuning $W_q$ primarily improves the model's ability to find information, while fine-tuning $W_v$ enhances how that information is represented or retrieved after it is found.
+
+To empirically compare them, we propose a long-document question answering task, where the model is given a long input article followed by a factual question. The correct answer appears only once in the article. We fine-tune separate models with LoRA applied to $W_q$ and $W_v$ respectively, and evaluate answer accuracy. This setup reveals whether improving the model’s ability to locate (via $W_q$) or extract (via $W_v$) information better supports the task.
+\end{answerbox}
+
+\item (1.0 pt) \textbf{LoRA Exclusively on the Last MLP}: Compare the effectiveness of applying LoRA exclusively to the last output Multi-Layer Perceptron (MLP) with the best approach from the previous analyses, where LoRA was applied to specific transformer weight matrices ($W_q$, $W_k$, or $W_v$) at the last layer. Discuss one advantage and one notable disadvantage of fine-tuning only the last MLP using LoRA, without adapting the transformer blocks. Specifically, elaborate on why restricting LoRA to the last MLP could potentially limit the model's capacity to fit the data $D$, considering factors such as: (a) the expressiveness of the output layer in capturing task-specific patterns, (b) the role of the transformer blocks in learning contextualized representations, and (c) the interplay between the adapted output layer and the frozen transformer weights in determining the model's overall performance on the downstream task. Support your reasoning with theoretical arguments about how the last output MLP impacts the prediction of $y_i[0]$, the first token of $y_i$.\\
+{\bf Support your arguments with the appropriate mathematical equations.}
+
+\begin{answerbox}[5in]
+    Using LoRA exclusively on the last MLP has both advantages and disadvantages compared to applying it to the last transformer block's weight matrices.
+\begin{itemize}
+    \item \textbf{Advantage:} Fine-tuning only the last MLP is computationally efficient. The MLP has fewer parameters than the entire transformer block, so LoRA can be applied with less overhead. This allows for faster training and lower memory usage, making it suitable for resource-constrained environments.
+
+    \item \textbf{Disadvantage:} Restricting LoRA to the last MLP limits the model's ability to learn task-specific patterns. The transformer blocks are crucial for learning contextualized representations of the input data. By not adapting them, we miss out on the rich interactions and dependencies captured in earlier layers. The last MLP can only transform the final representation, which may not be sufficient for complex tasks requiring deeper contextual understanding.
+
+    The prediction of $y_i[0]$ depends on the final representation $h_n$ from the last transformer block:
+    \[
+    y_i[0] = \text{MLP}(h_n)
+    \]
+    If $h_n$ is not well-adapted to the task due to frozen transformer weights, the MLP may struggle to produce accurate predictions, as it lacks the necessary context and information from earlier layers.
+    The expressiveness of the output layer is limited by the frozen transformer blocks, which may not capture the intricate relationships in the data. This can lead to suboptimal performance on downstream tasks, especially when the model needs to learn complex mappings from input to output.
+    In summary, while applying LoRA to the last MLP is computationally efficient, it may hinder the model's ability to learn task-specific patterns and capture contextualized representations, ultimately affecting performance on downstream tasks.
+\end{itemize}
+% Students can write or type their answer here.
+\end{answerbox}
+~
+\end{enumerate}
+
+
+
+\end{enumerate}
+

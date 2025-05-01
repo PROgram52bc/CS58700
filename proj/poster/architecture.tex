@@ -1,0 +1,28 @@
+\begin{tikzpicture}[node distance=1.8cm, every node/.style={align=center}, >=latex']
+
+\node (input) [draw, rounded corners, minimum width=2.5cm, minimum height=1cm]
+{\textbf{Input 1: Digits}\\ Grid of Digits};
+
+\node (perception) [draw, rounded corners, below of=input, minimum width=2.5cm,
+minimum height=1cm, yshift=-1.5cm] {\textbf{Perception}\\ Digit Recognizer};
+
+\node (tag) [draw, rounded corners, right of=input, xshift=7.5cm, minimum
+width=2.5cm, minimum height=1cm] {\textbf{Input 2: Tag}\\ Row/Col Selection};
+
+\node (programhead) [draw, rounded corners, below of=tag, minimum
+width=2.5cm, yshift=-1.5cm, minimum height=1cm] {\textbf{Program Head}\\ (Pointer Network)};
+
+\node (symbolic) [draw, rounded corners, below of=perception, yshift=-1.5cm,
+minimum width=4cm, xshift=4.25cm, minimum height=1cm] {\textbf{Symbolic Reasoning}\\
+(Symmetrized Selection)};
+
+\node (output) [draw, rounded corners, below of=symbolic, yshift=-1.2cm, minimum
+width=2.5cm, minimum height=1cm] {\textbf{Output}\\ Sum Prediction};
+
+% Arrows
+\draw[->] (input) -- (perception);
+\draw[->] (tag) -- (programhead);
+\draw[->] (perception) -- (symbolic);
+\draw[->] (programhead) -- (symbolic);
+\draw[->] (symbolic) -- (output);
+\end{tikzpicture}%

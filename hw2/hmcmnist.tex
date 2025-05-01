@@ -1,0 +1,421 @@
+
+\section{Q2 (4.0 pts): Hamiltonian Monte Carlo for Multi Layer Perceptron in Image classification} In this part, you are going to implement HMC Sampler for learning Multi Layer Perceptron (MLP) weights.
+%
+
+% Space.
+%
+\hfill
+
+% Download skeleton.
+%
+\noindent \textbf{Skeleton Package:}
+%
+A skeleton package named ``\texttt{hw2\_hmcmlp\_skeleton}'' is provided on Brightspace.
+%
+You should be able to download it and use the folder structure provided.
+%
+%
+\noindent The zip file should have the following folder structure:
+
+% Skeleton figure.
+%
+\tikzstyle{every node}=[draw=black,thick,anchor=west]
+\tikzstyle{selected}=[draw=red,fill=red!30]
+\tikzstyle{core}=[draw=blue,fill=blue!30]
+\tikzstyle{optional}=[dashed,draw=red,fill=gray!50]
+%
+\begin{tikzpicture}[%
+    grow via three points={
+        one child at (0.5,-0.7) and two children at (0.5,-0.7) and (0.5,-1.4)
+    },
+    edge from parent path={(\tikzparentnode.south) |- (\tikzchildnode.west)}
+]
+%
+    \node {hw\homeworknumber\_hmcmlp\_skeleton}
+    child {node {NeuralNetwork.py}}
+    child {node {mnist.py}}
+    child {node {utils.py}}
+    child {node [core] {main.py}}
+    child {node {minibatcher.py}}
+    child {node [selected] {HamiltonianMonteCarlo.py}}
+    child {node [selected] {PerturbedHamiltonianMonteCarlo.py}}
+    child {node {scholar.sh}};
+    \end{tikzpicture}
+
+% Space.
+%
+\hfill
+
+% Skeleton description.
+%
+\begin{itemize}
+%
+\item
+    \textbf{hw\homeworknumber\_hmcmlp\_skeleton}
+    %
+    the top-level folder that contains all the files required in this homework.
+%
+\item
+    \textbf{ReadMe:}
+    %
+    Your ReadMe should begin with a couple of \textbf{execution commands},
+    e.g., ``python hw\homeworknumber.py data'', used to generate the outputs
+    you report.
+    %
+    TA would replicate your results with the commands provided here.
+    %
+    More detailed options, usages and designs of your program can be followed.
+    %
+    You can also list any concerns that you think TA should know while running
+    your program.
+    %
+    Note that put the information that you think it's more important at the
+    top.
+    %
+    Moreover, the file should be written in pure text format that can be
+    displayed with Linux ``less'' command.
+    %
+    
+%
+\item
+    \textbf{utils.py:}
+    %
+    Utility functionalities used in main execution files.
+
+\item
+    \textbf{main.py:}
+    %
+    The \underline{main executable} to run HMC sampling for MLP parameters. You are asked to not to change the code. Even if you change any part of the code, while doing the evaluation the TA will replace it with the original main.py file.
+    %
+
+
+\item
+    \textbf{minibatcher.py:}
+    %
+    Python Module to implement batchifying in MNIST dataset%
+    %
+\item
+    \textbf{mnist.py:} A mnist data structure to load the MNIST dataset.
+%
+\item
+    \textbf{NeuralNetwork.py:} Multi Layer Perceptron model implemented with PyTorch defined for this homework. You should not change the code.
+    %
+    %
+    \item \textbf{HamiltonianMonteCarlo.py:} \underline{\bf You will need to implement} the necessary functions here for developing a Hamiltonian Monte Carlo Sampler Module
+    \item \textbf{PerturbedHamiltonianMonteCarlo.py:} \underline{\bf You will need to implement} the necessary functions here for developing a Hamiltonian Monte Carlo Sampler Module where only the last upper layer of the MLP will be sampled
+    %
+    \item \textbf{scholar.py:} A utility bash script to help you submit the Python process to a GPU compute node.
+    
+%
+\end{itemize}
+
+
+% =============================================================================
+% *****************************************************************************
+% -----------------------------------------------------------------------------
+% ## Q2
+% -----------------------------------------------------------------------------
+% *****************************************************************************
+% =============================================================================
+
+% Beginning of HMC question.
+%
+\newpage
+\section*{%
+    HMC for MLP parameters
+}
+
+% Space.
+%
+\hfill
+
+% Introduction.
+%
+\noindent
+%
+Consider both a 1-hidden layer (``Shallow") and a 2-hidden layered (``Deep") Multi Layer perceptrons (MLP). You are going to implement a posterior sampler using Hamiltonian Monte Carlo (HMC) algorithm presented in the class to classify MNIST images. For simplicity purpose, the problem of image classification has been converted into a binary one, instead of multi-class: every image has been labeled either 0 for even digits (0, 2, 4, 6, 8) or 1 for odd digits (1, 3, 5, 7) 
+%Consider a Gaussian Mixture Model (GMM) $X \in \mathbb{R}^2$ with $M$ clusters and parameters $\mW = \{\mu_{i}, \sigma_{i}, w_{i}\}_{i = 1}^{M}$, where $\mu_{i} \in \mathbb{R}^2$.
+%That is, the GMM descibes a set of points in the 2D plane.
+%You are going implement a posterior sampler using the Hamiltion Monte Carlo (HMC) algorithm presented in class.
+
+HMC recap: In general, given a model (say, our MLP) with parameters  $\mW$ and a training dataset $D$.
+A Bayesian sampler of this model obtains $m$ samples $\mW_{t} \sim P(\mW|D)$, where $t \in \{0,\ldots,m-1\}$ is the sample index.
+To achieve this via HMC, we need two measurements, the {\em potential} energy $U(\mW)$
+and the {\em kinetic} energy $K(\mPhi)$, where $\mPhi \sim \mathcal{N}(0, \mR)$ is the
+auxiliary momentum in HMC algorithm randomly sampled from zero-mean Gaussian
+distribution with covariance matrix $\mR$.
+The choice of $\mR$ is left to you.
+
+Given an arbitrary dataset $\mathcal{D}$, we have $$U(\mW) = -\log
+P(\mathcal{D}|\mW) + Z_{U},$$ and $$K(\mPhi) = 0.5 \cdot \mPhi^\mathsf{T}
+\mR^{-1} \mPhi + Z_{K},$$ where $-\log P(\mathcal{D}|\mW)$ is negative
+log-likelihood (mean) of model parameter on dataset $\mathcal{D}$ and $Z_{U},
+Z_{K}$ are arbitrary constants.
+Thus, we can regard the total energy as $$H(\mW, \mPhi) = -\log
+P(\mathcal{D}|\mW) + 0.5 \cdot \mPhi^\mathsf{T} \mR^{-1} \mPhi.$$
+
+The HMC algorithm can be described as \Cref{alg:hmc}:
+\begin{algorithm}
+\caption{Single Step Sampling of Hamilton Mento Carlo}
+\label{alg:hmc}
+\begin{algorithmic}
+\Require Previous sample $\mW_{t}$, Size of Leapfrog Step $\delta$, Number of
+Leapfrog Steps $L$, Covariance $\mR$
+\Ensure New sample $\mW_{t + 1}$
+\State $\mPhi_{0} \sim \mathcal{N}(0, \mR)$
+\State $\mX_{0} = \mW_{t}$
+\For{$l = 0, \cdots, L - 1$}
+    \State $\mPhi_{\big( l + \frac{1}{2} \big) \delta} = \mPhi_{l \delta} -
+    \frac{\delta}{2} \left. \frac{\partial U(\mW)}{\partial \mW}
+    \right|_{\mW = \mX_{l \delta}}$
+    \State $\mX_{(l + 1) \delta} = \mX_{l \delta} + \delta \mR^{-1}
+    \mPhi_{\big( l + \frac{1}{2} \big) \delta}$
+    \State $\mPhi_{(l + 1) \delta} = \mPhi_{\big( l +
+    \frac{1}{2} \big) \delta} - \frac{\delta}{2} \left. \frac{\partial U(\mW)}
+    {\partial \mW} \right|_{\mW = \mX_{(l + 1) \delta}}$
+\EndFor
+\State $\alpha = \min\big(1, \exp(-H(\mX_{L \delta}, \mPhi_{L \delta}) +
+H(\mX_{0}, \mPhi_{0}))\big)$
+\If{$\text{Uniform}(0, 1) \leq \alpha$}
+    \State $\mW_{t + 1} = \mX_{L \delta}$
+\Else
+    \State $\mW_{t + 1} = \mW_{t}$
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+% Space.
+%
+\hfill
+
+% Space.
+%
+\hfill
+
+% Files to work on.
+%
+%\newpage
+\noindent Action Items:
+%
+Let $\mathbf{W}$ are the weights of the Multi Layer Perceprton, and $\mathcal{D} = \{\mathbf{x_i}, \mathbf{y_i}\}_{i=1}^n$ are the training data ($\mathbf{x_i}$ being the MNIST image and $\mathbf{y_i}$ is the image label). 
+After sampling $K$ samples of MLP weights $\mathbf{W^{(1)}}, \mathbf{W^{(2)}}, \ldots, \mathbf{W^{(k)}}$, the Bayesian average model for classification will be,\\
+$p(\mathbf{y}|\mathbf{x}; \{\mathbf{x_i}, \mathbf{y_i}\}_{i=1}^{n}) = \frac{1}{K}\sum_{k=1}^{K}p(\mathbf{y}|\mathbf{x}; \mathbf{W}^{(k)} )$ where $ \mW^{(k)} \sim P(\mW | \mathcal{D})$.
+    
+    We will implement $\mW^{(k)} \sim P(\mW | \mathcal{D})$ by HMC in \texttt{HamiltonianMonteCarlo.py} and \texttt{PerturbedHamiltonianMonteCarlo.py} 
+    according to \Cref{alg:hmc}.
+    Go through all related modules. Specifically, you should understand \texttt{main.py}, \texttt{utils.py}, \texttt{NeuralNetworks.py}.
+    Run the \texttt{main.py} with default arguments: \texttt{python main.py} to run the programs.
+% Group all Reliability figures (Alternating Deep/Shallow, MLE/Bayesian/Perturbed, Test)
+
+\begin{figure}[h!]
+    \centering
+    \subfigure[Deep MLE Train Loss]{\includegraphics[width=0.45\textwidth]{deep_mle_train_loss.jpg}\label{fig:deep_mle_train_loss}}
+    \subfigure[Shallow MLE Train Loss]{\includegraphics[width=0.45\textwidth]{shallow_mle_train_loss.jpg}\label{fig:shallow_mle_train_loss}}
+    \caption{Train Loss Performance for Deep and Shallow Networks - MLE vs. Bayesian vs. Perturbed}
+    \label{fig:loss_performance}
+\end{figure}
+
+% Group all Accuracy figures (Alternating Deep/Shallow, MLE/Bayesian/Perturbed)
+\begin{figure}[h!]
+    \centering
+    \subfigure[Deep MLE Test Accuracy]{\includegraphics[width=0.3\textwidth]{deep_mle_test_accuracy.jpg}\label{fig:deep_mle_test_accuracy}}
+    \subfigure[Deep Bayesian Test Accuracy]{\includegraphics[width=0.3\textwidth]{deep_bayessian_test_auc.jpg}\label{fig:deep_bayessian_test_accuracy}}
+    \subfigure[Deep Perturbed Bayesian Test Accuracy]{\includegraphics[width=0.3\textwidth]{deep_perturbed_bayessian_test_auc.jpg}\label{fig:deep_perturbed_bayessian_test_accuracy}} \\
+    \subfigure[Shallow MLE Test Accuracy]{\includegraphics[width=0.3\textwidth]{shallow_mle_test_accuracy.jpg}\label{fig:shallow_mle_test_accuracy}}
+    \subfigure[Shallow Bayesian Test Accuracy]{\includegraphics[width=0.3\textwidth]{shallow_bayessian_test_auc.jpg}\label{fig:shallow_bayessian_test_accuracy}}
+    \subfigure[Shallow Perturbed Bayesian Test Accuracy]{\includegraphics[width=0.3\textwidth]{shallow_perturbed_bayessian_test_auc.jpg}\label{fig:shallow_perturbed_bayessian_test_accuracy}} 
+    \caption{Test Accuracy Results for Deep and Shallow Networks - MLE vs. Bayesian vs. Perturbed}
+    \label{fig:accuracy_performance}
+\end{figure}
+
+\begin{enumerate}
+%
+   
+\item
+    (1.5 pts) Fill in the missing parts of \texttt{get\_sampled\_velocities()}, \texttt{leapfrog()}, \texttt{accept\_or\_reject()} functions in \texttt{HamiltonianMonteCarlo.py}. Go through the comments in the starter code for each function to understand what they are expected to do. 
+    
+    In short, \texttt{get\_sampled\_velocities()} sample the initial values of velocities $\mPhi_{0}$; \texttt{leapfrog()} implements the update of $\mPhi, \mX$ through leapfrog steps; \texttt{accept\_or\_reject()} implements the acceptance or rejection procedeure in the algorithm based on the kinetic and potential energies; and \texttt{sample()} combine all these three functions in a way to generate $K$ samples of MLP weight parameters by generating initial velocities, calling leapfrog function multiple times to generate new velocities, decide whether to accept or reject new sample and then prepare the samples.    
+    
+\item (1 pts) Fill in the missing parts of \texttt{get\_sampled\_velocities()}, \texttt{leapfrog()}, \texttt{accept\_or\_reject()} functions in \texttt{PerturbedHamiltonianMonteCarlo.py} in such a way that it only updates the last layers weights and biases through sampling. In previous implementation all the layers had their weights and biases updated.
+
+\item (Introduction to model calibration) In measuring model performance, we do not only care about accuracy or loss, but also care about if the model is "calibrated", which means we want it to output the ground-truth probability.
+
+Consider our MLP model $f_{\mW}$, parametrized by weight parameters $\mW$. $\mathcal{D} = \{\mathbf{x_i}, \mathbf{y_i}\}_{i=1}^n$ are the training data ($\mathbf{x_i}$ being the MNIST image and $\mathbf{y_i}$ is the image label). For a given input $\vx_i$, the prediction $\hat{y}_i$ can be denoted as,
+\begin{displaymath}
+\hat{y}_i := \argmax_{k \in {0,1}}[f_{\mW}(\vx_i)]_k,
+\end{displaymath}
+and the prediction probability (confidence) $\hat{p}_i$ can be denoted as,
+\begin{displaymath}
+\hat{p}_i := \max_{k \in {0,1}}[f_{\mW}(\vx_i)]_k.
+\end{displaymath}
+The perfect calibrated model is defined as $P(\hat{Y}=Y|\hat{p} = \alpha) = \alpha$. One notion of miscalibration is the difference in expecctation between confidence and accuracy, i..e, $\mathbb{E}_{\hat{p}}(|P(\hat{Y}=Y|\hat{p} = \alpha) - \alpha|)$. To approximate it by finite samples, we divide the probability/confidence interval $[0,1]$ into $M$ equal sized bins $B_1, B_2, \ldots B_M$. For each of the example $\vx_i$ we group them into these bins according to their $\hat{p_i}$ value, i.e., $B_j = \{i: \hat{p}_i\in [\frac{j-1}{M}, \frac{j}{M})\}$. 
+Then, for each bucket $B_j$, we find out 
+%
+\begin{displaymath}
+\rho_j := \frac{1}{\lvert B_j\rvert}\sum_{i \in B_j}{\hat{p}_i},
+\end{displaymath}
+and
+\begin{displaymath} \phi_j := \frac{1}{\lvert B_j\rvert}\sum_{i \in B_j}\mathbf{1}[{\hat{y_i} \text{ is the true label}}].
+\end{displaymath}
+%
+We plot these $(\rho_j, \phi_j)$ in the reliability diagram where $X$-axis is for $\rho$ and $Y$-axis is for $\phi$. $\rho_j, \phi_j$ are respectively called the average confidence and average accuracy for bucket $B_j$. We also define Expected Calibration Error (ECE),
+%
+\begin{displaymath}
+ECE := \frac{1}{n}\sum_{j=1}^{M}{\lvert B_j\rvert}{\lvert \rho_j - \phi_j\rvert}.
+\end{displaymath}
+
+\item (1.5 pts) To perform this task, we need to understand how \texttt{main.py} works. This script will at first learn the Multi Layer perceptron network using traditional MLE based learning. The default configuration for the MLP is shallow (only 1 hidden layer). The accuracy and losses are plotted in the process. Then after being pre-trained for a fixed number of epochs, more networks will be sampled through HMC sampling and the averaged output from the ensemble will be used in prediction. After that, perturbed version of HMC sampling is done where only the last layers' weights and biases are sampled. These sampled networks are averaged again for another set of predictions. 
+
+Go through the code to understand how it works. After all the predictions using the MLE, HMC sampling and perturbed HMC sampling are done, ROC curves and reliability curves for all the models on their training and test data are plotted for analysis. Your tasks are:
+
+\begin{enumerate}
+    \item (0.5pt) Run the \texttt{main.py} for both shallow and deep networks using the \texttt{--depth} argument while running the code. If you run \texttt{python main.py --depth shallow}, the whole procedure will be run for the shallow network, generating loss, accuracy, ROC, and reliability plots. If you run \texttt{python main.py --depth deep}, the whole procedure will be run for the deep network. You need to understand other command line arguments to tune the necessary hyperparameters (learning rate, leapfrog step numbers, leapfrog step size, delta, etc.). You can set different values for these hyperparameters using the command line arguments. Also, to reduce the runtime, using the \texttt{--loaded} argument, you can decide whether you will learn a neural network and save it, or you will load from an already saved network for the procedures.
+    
+    In the report, include all the plots that will be generated. Also, mention the training and test accuracies for MLE, sampled, and perturb-sampled models. For each of these three models, write their Expected Calibration Error (ECE) and Expected calibration error at 50\% threshold.
+
+    \begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|p{6cm}|p{6cm}|}
+        \hline
+        \multirow{2}{*}{Model} & \textbf{Shallow Network} & \textbf{Deep Network} \\
+        \cline{2-3}
+        & Accuracy / ECE / Threshold & Accuracy / ECE / Threshold \\
+        \hline
+        \textbf{MLE Model} & 
+        Training Accuracy: 0.9815 \par
+        Test Accuracy: 0.9644 \par
+        ECE: 0.083466 \par
+        ECE at 50\%: 0.083466 & 
+        Training Accuracy: 0.99688 \par
+        Test Accuracy: 0.9786 \par
+        ECE: 0.007236 \par
+        ECE at 50\%: 0.007236 \\
+        \hline
+        \textbf{Sampled Model} & 
+        Training Accuracy: 0.9108 \par
+        Test Accuracy: 0.9034 \par
+        ECE: 0.075352 \par
+        ECE at 50\%: 0.075352 & 
+        Training Accuracy: 0.89177 \par
+        Test Accuracy: 0.8792 \par
+        ECE: 0.031918 \par
+        ECE at 50\%: 0.031918 \\
+        \hline
+        \textbf{Perturbed Sampled Model} & 
+        Training Accuracy: 0.8938 \par
+        Test Accuracy: 0.8886 \par
+        ECE: 0.078595 \par
+        ECE at 50\%: 0.078595 & 
+        Training Accuracy: 0.96865 \par
+        Test Accuracy: 0.9584 \par
+        ECE: 0.002248 \par
+        ECE at 50\%: 0.002248 \\
+        \hline
+    \end{tabular}
+    \caption{Training and Test Accuracies, ECE, and ECE at 50\% Threshold for Shallow and Deep Networks}
+    \label{tab:accuracy_ece}
+\end{table}
+
+The MLE model performs the best in terms of accuracy, but all models show
+relatively high ECE, especially in comparison to the deep network models.  
+
+The deep networks show better performance (higher accuracies and lower ECE),
+especially with the MLE and Perturbed Sampled models.
+
+While the Sampled and Perturbed Sampled models have lower accuracy compared to
+the MLE models, they show lower ECE values, indicating better calibration and
+more reliable probability estimates, especially for deep networks.  
+
+In general, the deep networks tend to perform better both in terms of accuracy
+and calibration (lower ECE). However, the sampled and perturbed models offer
+advantages in terms of calibration, which may make them more useful in certain
+applications where well-calibrated probabilities are important.
+
+
+    \item (0.5 pt) Explain the findings you got from the generated ROC curves and AUC scores. Does introducing Bayesian sampling improve the performances? If we only sample the last layers, but with more steps, how does the performance change?
+
+\begin{figure}[h!]
+    \centering
+    \subfigure[Deep MLE Test AUC]{\includegraphics[width=0.3\textwidth]{deep_mle_test_auc.jpg}\label{fig:deep_mle_test_auc}}
+    \subfigure[Deep Bayesian Test AUC]{\includegraphics[width=0.3\textwidth]{deep_bayessian_test_auc.jpg}\label{fig:deep_bayesian_test_auc}}
+    \subfigure[Deep Perturbed Bayesian Test AUC]{\includegraphics[width=0.3\textwidth]{deep_perturbed_bayessian_test_auc.jpg}\label{fig:deep_perturbed_bayessian_test_auc}} \\
+    \subfigure[Shallow MLE Test AUC]{\includegraphics[width=0.3\textwidth]{shallow_mle_test_auc.jpg}\label{fig:shallow_mle_test_auc}}
+    \subfigure[Shallow Bayesian Test AUC]{\includegraphics[width=0.3\textwidth]{shallow_bayessian_test_auc.jpg}\label{fig:shallow_bayesian_test_auc}}
+    \subfigure[Shallow Perturbed Bayesian Test AUC]{\includegraphics[width=0.3\textwidth]{shallow_perturbed_bayessian_test_auc.jpg}\label{fig:shallow_perturbed_bayessian_test_auc}} 
+    \caption{Test AUC Performance for Deep and Shallow Networks - MLE vs. Bayesian vs. Perturbed}
+    \label{fig:test_auc_performance}
+\end{figure}
+
+
+    \textbf{ROC Curve and AUC Scores:} Comparing to the shallow model, the deep
+    model generally have a better performance in terms of AUC scores, as shown
+    in \Cref{tab:accuracy_ece}. This can be a result of more neurons
+    participating in the classification task, leading to better generalizability
+    and computational power. \\
+
+    The ROC curves and AUC scores are shown in \Cref{fig:test_auc_performance}.\\
+
+    The MLE model has the highest AUC score for both deep and shallow models,
+    indicating that it has the best performance in terms of classification.
+
+    \textbf{MLE Model:} The MLE model has an AUC score of 0.9976 and 0.9626 for the deep and shallow model respectively. \\
+    \textbf{Sampled Model:} The sampled model (sampling on all layers) has an AUC score of 0.9932 and 0.9421 for the deep and shallow model respectively. \\ 
+    \textbf{Perturbed Sampled Model:} The perturbed sampled model (sampling on the last layer) has an AUC score of 0.9971 and 0.9582 for the deep and shallow model respectively. \\
+    
+    \textbf{Does Bayesian sampling improve performance?} \\
+
+    Not really. Because the AUC score of the sampled model is lower than the MLE
+    model.  This can be due to the fact that the sampled model is not focused on
+    learning the data, but rather on the overall distribution, which resulted in
+    a loss of AUC score. \\.
+
+    \textbf{Does sampling only the last layers with more steps improve performance?} \\
+
+    Yes. The perturbed sampled model has a higher AUC score than the sampled
+    model for both deep and shallow models. This can be due to the fact that the
+    perturbed sampled model is more focused on the last layers, which serves as
+    a regularization mechanism to prevent overfitting, leading to a better AUC
+    score.  \\
+    
+    \item (0.5 pt) Explain the findings you got from the generated Reliability curves and ECE scores. Does introducing Bayesian sampling improve the performances? If we only sample the last layers, but with more steps, how does the performance change?
+
+\begin{figure}[h!]
+    \centering
+    \subfigure[Deep MLE Test Reliability]{\includegraphics[width=0.3\textwidth]{deep_mle_test_reliablity.jpg}\label{fig:deep_mle_test_reliablity}}
+    \subfigure[Deep Bayesian Test Reliability]{\includegraphics[width=0.3\textwidth]{deep_bayessian_test_reliablity.jpg}\label{fig:deep_bayesian_test_reliablity}}
+    \subfigure[Deep Perturbed Bayesian Test Reliability]{\includegraphics[width=0.3\textwidth]{deep_perturbed_bayessian_test_reliablity.jpg}\label{fig:deep_perturbed_bayessian_test_reliablity}} \\
+    \subfigure[Shallow MLE Test Reliability]{\includegraphics[width=0.3\textwidth]{shallow_mle_test_reliablity.jpg}\label{fig:shallow_mle_test_reliablity}}
+    \subfigure[Shallow Bayesian Test Reliability]{\includegraphics[width=0.3\textwidth]{shallow_bayessian_test_reliablity.jpg}\label{fig:shallow_bayesian_test_reliablity}}
+    \subfigure[Shallow Perturbed Bayesian Test Reliability]{\includegraphics[width=0.3\textwidth]{shallow_perturbed_bayessian_test_reliablity.jpg}\label{fig:shallow_perturbed_bayessian_test_reliablity}} 
+    \caption{Test Reliability Performance for Deep and Shallow Networks - MLE vs. Bayesian vs. Perturbed}
+    \label{fig:test_reliability_performance}
+\end{figure}
+
+    % Fill in the blanks with your findings
+    \textbf{Reliability Curve and ECE Scores:} The reliability curve and ECE
+    scores are shown in \Cref{fig:test_reliability_performance}. The ECE scores
+    are shown in \Cref{tab:accuracy_ece}. \\
+
+    \textbf{MLE Model:} The MLE model has an ECE score of 0.083466 and 0.007236 for the shallow and deep model respectively. \\
+    \textbf{Sampled Model:} The sampled model (sampling on all layers) has an ECE score of 0.075352 and 0.031918 for the shallow and deep model respectively. \\
+    \textbf{Perturbed Sampled Model:} The perturbed sampled model (sampling on the last layer) has an ECE score of 0.078595 and 0.002248 for the shallow and deep model respectively. \\
+    
+    \textbf{Does Bayesian sampling improve performance?} \\
+
+    Yes. More specifically, the deep perturbed sampled model has a much lower
+    ECE score than the sampled model and the MLE model. This is also illustrated
+    in \Cref{fig:deep_perturbed_bayessian_test_reliablity}, where confidence and
+    accuracy are well-calibrated, and forms an almost perfect line. \\
+
+    \textbf{Does sampling only the last layers with more steps improve performance?} \\
+
+    Yes. Sampling on all layers worsens calibration, as seen in the higher ECE
+    score (0.031918). Perturbing the last layer drastically improves
+    calibration, leading to a very low ECE of 0.002248, which is the best
+    calibration performance among all models.
+
+\end{enumerate}
+
+\end{enumerate}
+
+% Table example.
+%
