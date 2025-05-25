@@ -1,0 +1,4 @@
+learning_curves: [4 layers, early stop at 1e-3]
+1739848410: [4 layers, early stop at 1e-5]
+1739848578: [2 layers, early stop at 1e-3]
+1739848523: [2 layers, early stop at 1e-5]
