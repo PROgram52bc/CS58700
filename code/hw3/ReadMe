@@ -1,0 +1,45 @@
+README for GCN-based Link Prediction Experiments
+=================================================
+
+Execution Commands
+------------------
+
+# Structural node representation (default)
+python main_ddi.py --device cuda
+
+# Structural representation with random masking
+python main_ddi.py --random-mask --device cuda
+
+# Positional node representation
+python main.py --positional --device cuda
+
+# Positional representation with random masking
+python main.py --positional --random-mask --device cuda
+
+# Inspect DDI dataset statistics
+python inspect_ddi.py
+
+
+Reported Test Results and Dataset Statistics
+-------------------------------
+
+- Structural (fixed target subgraph):      Hits@20 = 0.01869
+- Structural (random masking):             Hits@20 = 0.01980
+- Positional (fixed target subgraph):      Hits@20 = 0.46354
+- Positional (random masking):             Hits@20 = 0.52190
+
+- A histogram of the training node in-degree distribution is automatically
+generated and saved to: `plots/degree_histogram.pdf`
+
+Observations
+------------
+
+1. **Random masking improves generalization**.
+   Re-sampling the target subgraph each epoch slightly improves Hits@20 for both structural and positional cases.
+
+2. **Positional representations significantly outperform structural ones**.
+   Structural embeddings assign the same feature vector to all nodes, making them indistinguishable if their topology is identical.
+   Positional embeddings, learned individually for each node, enable the model to better capture node identities and relationships.
+
+3. **Best performance (Hits@20 = 0.52190)** is achieved by combining positional embeddings with random masking.
+
