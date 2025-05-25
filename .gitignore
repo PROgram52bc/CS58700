@@ -64,3 +64,7 @@ Thumbs.db
 # archive
 *.tar
 *.zip
+
+# project
+*.ptnnp
+slurm_logs

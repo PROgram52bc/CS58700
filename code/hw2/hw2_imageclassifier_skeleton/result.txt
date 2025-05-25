@@ -1,0 +1,10 @@
+--cnn --batch-size 100
+Train Loss: 0.299755
+Train Acc: 0.885517
+Test Acc: 0.884400
+
+--cnn --device cuda --kernel 3 --stride 3 --batch-size 100
+
+Train Loss: 1.543270
+Train Acc: 0.461400
+Test Acc: 0.465500

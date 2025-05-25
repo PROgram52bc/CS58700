@@ -1,0 +1,3 @@
+#!/bin/bash
+source ../../activate.sh
+python3 main.py --cnn --device cuda --kernel 3 --stride 3 --batch-size 100

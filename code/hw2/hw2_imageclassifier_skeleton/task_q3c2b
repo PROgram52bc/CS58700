@@ -1,0 +1,2 @@
+#!/bin/bash
+python3 main.py --cnn --device cuda --kernel 14 --stride 1 --batch-size 100
